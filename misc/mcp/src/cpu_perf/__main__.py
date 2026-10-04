@@ -163,14 +163,23 @@ def start_daily_update(holder, args, updater=None):
     return updater
 
 
-TERMINAL_HINT = """cpu-perf is an MCP server: your AI client starts it and talks to it over stdin.
+def command() -> str:
+    """How the person started this program, for the commands we suggest: uvx
+    runs it from uv's cache, where there is no `cpu-perf` on the PATH."""
+    path = os.path.abspath(sys.argv[0] or "").replace("\\", "/")
+    return "uvx cpu-perf" if "/uv/" in path else "cpu-perf"
+
+
+def terminal_hint() -> str:
+    c = command()
+    return f"""cpu-perf is an MCP server: your AI client starts it and talks to it over stdin.
 Add it to a client instead of running it here:
 
     claude mcp add --scope user cpu-perf -- uvx cpu-perf
     codex mcp add cpu-perf -- uvx cpu-perf
 
-From a terminal: `cpu-perf status` shows the source library, `cpu-perf index`
-builds it now, `cpu-perf --help` lists the rest. Waiting for a client on
+From a terminal: `{c} status` shows the source library, `{c} index`
+builds it now, `{c} --help` lists the rest. Waiting for a client on
 stdin; Ctrl-C quits."""
 
 
@@ -203,7 +212,7 @@ def cmd_serve(args) -> int:
         brain.lib.start()
     if args.transport == "stdio":
         if sys.stdin.isatty():
-            print(TERMINAL_HINT, file=sys.stderr)
+            print(terminal_hint(), file=sys.stderr)
         # Ctrl-C: the stdio transport waits on a stdin read that a terminal never ends
         signal.signal(signal.SIGINT, lambda *_: _leave(holder, 130))
         srv.run("stdio")
@@ -266,7 +275,7 @@ def cmd_index(args) -> int:
     except KeyboardInterrupt:
         stop.set()
         p = lib.crawler.progress
-        print(f"\nstopped at {p.done}/{p.total} sources; run `cpu-perf index` again to continue", file=sys.stderr)
+        print(f"\nstopped at {p.done}/{p.total} sources; run `{command()} index` again to continue", file=sys.stderr)
         os._exit(130)  # downloads in flight would hold the process open; what is done is committed
     finally:
         stop.set()
@@ -284,7 +293,7 @@ def cmd_status(args) -> int:
     if args.json:
         print(json.dumps(out.model_dump(mode="json"), indent=1))
     else:
-        print(render.status(out, cli=True))
+        print(render.status(out, cli=command()))
     return 0
 
 

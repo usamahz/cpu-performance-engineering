@@ -79,3 +79,12 @@ def test_ctrl_c_stops_a_crawl_instead_of_finishing_it(tmp_path):
             timer.cancel()
         assert time.monotonic() - t < 6  # the whole queue would take about 12 s
         assert crawler.progress.done < len(targets)
+
+
+def test_suggested_commands_match_how_it_was_started(monkeypatch):
+    monkeypatch.setattr(cli.sys, "argv", ["/home/me/.cache/uv/archive-v0/abc/bin/cpu-perf"])
+    assert cli.command() == "uvx cpu-perf" and "`uvx cpu-perf status`" in cli.terminal_hint()
+    monkeypatch.setattr(cli.sys, "argv", ["/home/me/venv/bin/cpu-perf"])
+    assert cli.command() == "cpu-perf" and "`cpu-perf index`" in cli.terminal_hint()
+    monkeypatch.setattr(cli.sys, "argv", ["C:\\Users\\me\\AppData\\Local\\uv\\cache\\archive-v0\\x\\Scripts\\cpu-perf.exe"])
+    assert cli.command() == "uvx cpu-perf"

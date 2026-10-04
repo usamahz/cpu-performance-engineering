@@ -306,9 +306,10 @@ def file(o: FileOut) -> str:
     return f"# {o.path}\n<{o.url}> characters {o.offset}-{o.offset + len(o.text)} of {o.total_chars}\n\n```\n{o.text}\n```{more}"
 
 
-def status(o: LibraryStatusOut, cli: bool = False) -> str:
-    """cli: for `cpu-perf status`, which reads the library but runs none of the
-    server's background work, so its own switches are not the library's state."""
+def status(o: LibraryStatusOut, cli: str = "") -> str:
+    """cli: the command the person typed (`cpu-perf` or `uvx cpu-perf`), for
+    `cpu-perf status`, which reads the library but runs none of the server's
+    background work, so its own switches are not the library's state."""
     head = [f"List: {o.corpus}" if o.corpus else "", f"Daily list update: {o.list_update}" if o.list_update and not cli else ""]
     head = [h for h in head if h]
     if not o.enabled:
@@ -329,8 +330,8 @@ def status(o: LibraryStatusOut, cli: bool = False) -> str:
         out.append("Another process is building the library.")
     if cli and o.indexed < o.targets and not o.lock_held_elsewhere:
         out.append(
-            "The server fills the library in the background while a client runs it; `cpu-perf index` does it now, "
-            "with progress. `cpu-perf status --detail` lists every source with its state."
+            f"The server fills the library in the background while a client runs it; `{cli} index` does it now, "
+            f"with progress. `{cli} status --detail` lists every source with its state."
         )
     for s in o.sources:
         if s.get("status") not in ("indexed",):
