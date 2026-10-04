@@ -1,0 +1,104 @@
+name: MCP server
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Server tests (${{ matrix.os }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python: "3.10"
+          - os: ubuntu-latest
+            python: "3.13"
+          - os: windows-latest
+            python: "3.12"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install the server
+        run: python -m pip install -e "misc/mcp[test]"
+      - name: Tests (no network)
+        run: python -m pytest misc/mcp/tests -q -p no:cacheprovider
+      - name: Self-test
+        run: cpu-perf --selftest
+
+  wheel:
+    name: Wheel carries the corpus
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build through an sdist and straight from the tree
+        run: |
+          python -m pip install build
+          python -m build misc/mcp --outdir "$RUNNER_TEMP/dist"
+          python -m pip wheel --no-deps misc/mcp -w "$RUNNER_TEMP/tree"
+      - name: Same corpus both ways, nothing written to the tree
+        run: |
+          python - <<'EOF'
+          import glob, os, zipfile
+          tmp = os.environ["RUNNER_TEMP"]
+          a = zipfile.ZipFile(glob.glob(f"{tmp}/dist/*.whl")[0]).namelist()
+          b = zipfile.ZipFile(glob.glob(f"{tmp}/tree/*.whl")[0]).namelist()
+          ca = sorted(n for n in a if "/corpus/" in n)
+          cb = sorted(n for n in b if "/corpus/" in n)
+          assert ca == cb and len(ca) > 100, (len(ca), len(cb))
+          print(len(ca), "corpus files in both wheels")
+          EOF
+          test -z "$(git status --porcelain)"
+      - name: The installed wheel serves its bundled copy
+        run: |
+          cd "$RUNNER_TEMP"
+          python -m venv smoke
+          smoke/bin/pip install dist/*.whl pytest
+          smoke/bin/cpu-perf --selftest | tee selftest.txt
+          grep -q "^source: bundled" selftest.txt
+          cp -r "$GITHUB_WORKSPACE/misc/mcp/tests" wheel-tests
+          smoke/bin/python -m pytest wheel-tests -q -p no:cacheprovider
+      - name: The documented install command
+        if: github.event_name == 'push'
+        run: |
+          python -m pip install uv
+          uvx --from "git+https://github.com/${{ github.repository }}@${{ github.sha }}#subdirectory=misc/mcp" cpu-perf --selftest
+
+  container:
+    name: Container serves HTTP
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the image
+        run: docker build -f misc/mcp/Dockerfile --build-arg GIT_COMMIT=${{ github.sha }} -t cpu-perf .
+      - name: Serve, check health, list the tools
+        run: |
+          docker run -d --name mcp -p 8000:8000 -e CPU_PERF_AUTO_INDEX=0 -e CPU_PERF_AUTO_UPDATE=0 -e CPU_PERF_EMBED_MODEL=none cpu-perf
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8000/healthz && break; sleep 1; done
+          docker exec mcp python -c "
+          import anyio
+          from mcp import Client
+          async def main():
+              async with Client('http://127.0.0.1:8000/mcp') as c:
+                  names = {t.name for t in (await c.list_tools()).tools}
+                  assert {'ask', 'lookup', 'search', 'fetch', 'get_entry', 'read_source'} <= names, names
+                  r = await c.call_tool('get_section', {})
+                  assert not r.is_error and r.structured_content is None
+                  r = await c.call_tool('search', {'query': 'false sharing'})
+                  assert r.structured_content['results'], r
+                  print(len(names), 'tools over HTTP')
+          anyio.run(main)
+          "
+      - name: Logs
+        if: always()
+        run: docker logs mcp || true

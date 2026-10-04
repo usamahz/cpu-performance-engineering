@@ -1,0 +1,46 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cpu-perf"
+version = "0.1.0"
+description = "MCP server for the CPU Performance Engineering list: the reading list, its editorial record, its benchmarks and a searchable local index of every linked source."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "usamahz" }]
+keywords = ["mcp", "cpu", "performance", "rag", "model-context-protocol"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries",
+]
+dependencies = [
+    "mcp>=2.2,<3",
+    "pypdfium2>=4",
+    "model2vec>=0.6",
+    "huggingface-hub>=0.20",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[project.scripts]
+cpu-perf = "cpu_perf.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/usamahz/cpu-performance-engineering"
+Source = "https://github.com/usamahz/cpu-performance-engineering/tree/main/misc/mcp"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cpu_perf"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "tests", "hatch_build.py", "README.md", "pyproject.toml"]
+
+[tool.hatch.build.hooks.custom]
+path = "hatch_build.py"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

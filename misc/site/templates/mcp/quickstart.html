@@ -1,0 +1,66 @@
+{% extends "_base.html" %}
+{% import "_macros.html" as m with context %}
+{% set mv = site.mcp %}
+{% set connect = mv.find("connect-it") %}
+{% set first_run = mv.find("the-first-run-building-the-library") %}
+{% set conf_sec = mv.find("configuration") %}
+{% block main %}
+{{ m.mcp_header(copy.mcp.nav_quickstart, copy.mcp.quickstart_heading, copy.mcp.quickstart_lede) }}
+{{ m.mcp_nav(active) }}
+<div class="container-lab with-aside">
+  <div class="main mcp-doc">
+    {% if connect %}
+    <section aria-labelledby="connect-it">
+      <h2 class="h2-section" id="connect-it">{{ connect.title }}</h2>
+      <div class="prose-lab">{{ mv.body_html("connect-it") | safe }}</div>
+      <div class="tabs client-tabs" data-tabs>
+        <div class="tablist" role="tablist" aria-label="{{ copy.mcp.clients }}" hidden>
+          {% for c in mv.children("connect-it") if c.anchor in mv.client_tabs %}<button type="button" role="tab" id="tab-{{ c.anchor }}" aria-controls="{{ c.anchor }}">{{ c.title }}</button>{% endfor %}
+        </div>
+        {% for c in mv.children("connect-it") if c.anchor in mv.client_tabs %}
+        <section class="tab-panel" id="{{ c.anchor }}" role="tabpanel" aria-labelledby="tab-{{ c.anchor }}">
+          <h3 class="tab-heading">{{ c.title }}</h3>
+          <div class="prose-lab">{{ mv.render(c.body, 2) | safe }}</div>
+          {% set via = mv.setup_via(c.anchor) %}
+          {% if via %}<div class="setup-via">
+            <p class="label-mono">{{ via.title }}</p>
+            <div class="prose-lab">{{ mv.render(via.body, 2) | safe }}</div>
+          </div>{% endif %}
+        </section>
+        {% endfor %}
+      </div>
+      {% for c in mv.children("connect-it", mv.client_tabs) %}
+      <section aria-labelledby="{{ c.anchor }}">
+        <h3 class="h3-section" id="{{ c.anchor }}">{{ c.title }}</h3>
+        <div class="prose-lab">{{ mv.render(c.body, 2) | safe }}</div>
+      </section>
+      {% endfor %}
+    </section>
+    {% endif %}
+    {% if first_run %}
+    <section aria-labelledby="{{ first_run.anchor }}">
+      <h2 class="h2-section" id="{{ first_run.anchor }}">{{ first_run.title }}</h2>
+      <div class="prose-lab">{{ mv.body_html(first_run.anchor) | safe }}</div>
+      <p class="small"><a class="link-primary" href="/mcp/security/#copyright-and-politeness">{{ mv.find("copyright-and-politeness").title }} →</a></p>
+    </section>
+    {% endif %}
+    {% if conf_sec %}
+    <section aria-labelledby="configuration">
+      <h2 class="h2-section" id="configuration">{{ conf_sec.title }}</h2>
+      <div class="prose-lab">{{ mv.body_html("configuration") | safe }}</div>
+    </section>
+    {% endif %}
+  </div>
+  <aside class="aside">
+    <nav class="toc" aria-label="{{ copy.mcp.on_this_page }}">
+      <p class="label-mono">{{ copy.mcp.on_this_page }}</p>
+      <ul>
+        {% for s in [connect, first_run, conf_sec] if s %}<li><a href="#{{ s.anchor }}">{{ s.title }}</a></li>
+        {% if s.anchor == "connect-it" %}{% for c in mv.children("connect-it") %}<li class="sub"><a href="#{{ c.anchor }}">{{ c.title }}</a></li>{% endfor %}{% endif %}
+        {% endfor %}
+      </ul>
+    </nav>
+    <a class="link-quiet small" href="{{ site.links.blob('misc/mcp/README.md') }}" rel="noopener">{{ copy.mcp.readme_link }}</a>
+  </aside>
+</div>
+{% endblock %}

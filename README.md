@@ -2,7 +2,7 @@
 
 ![](misc/banner-pinnacle-ridge.avif)
 
-[![Links](https://github.com/usamahz/cpu-performance-engineering/actions/workflows/links.yml/badge.svg)](https://github.com/usamahz/cpu-performance-engineering/actions/workflows/links.yml) [![Quality](https://github.com/usamahz/cpu-performance-engineering/actions/workflows/quality.yml/badge.svg)](https://github.com/usamahz/cpu-performance-engineering/actions/workflows/quality.yml) [![Entries](https://img.shields.io/badge/entries-304-1f6feb)](#contents) [![Benchmarks](https://img.shields.io/badge/benchmarks-14%20runnable-1f6feb)](misc/benchmarks/README.md) [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE) [![Stars](https://img.shields.io/github/stars/usamahz/cpu-performance-engineering?style=flat&color=555)](https://github.com/usamahz/cpu-performance-engineering/stargazers)
+[![Links](https://github.com/usamahz/cpu-performance-engineering/actions/workflows/links.yml/badge.svg)](https://github.com/usamahz/cpu-performance-engineering/actions/workflows/links.yml) [![Quality](https://github.com/usamahz/cpu-performance-engineering/actions/workflows/quality.yml/badge.svg)](https://github.com/usamahz/cpu-performance-engineering/actions/workflows/quality.yml) [![Entries](https://img.shields.io/badge/entries-304-1f6feb)](#contents) [![Benchmarks](https://img.shields.io/badge/benchmarks-14%20runnable-1f6feb)](misc/benchmarks/README.md) [![MCP](https://img.shields.io/badge/MCP-server-1f6feb)](misc/mcp/README.md) [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE) [![Stars](https://img.shields.io/github/stars/usamahz/cpu-performance-engineering?style=flat&color=555)](https://github.com/usamahz/cpu-performance-engineering/stargazers)
 
 Making a program fast on a modern CPU means knowing what the core does with
 each instruction, where the time actually goes, and how to prove a change
@@ -21,6 +21,28 @@ number, anywhere in this repository, carries all seven fields set out in
 **Proof.** Fourteen of the sections end in a benchmark under
 [misc/benchmarks/](misc/benchmarks/README.md): C source, the build line, the
 machine, the raw numbers and the analysis, all committed. Run them yourself.
+
+**Ask it.** The MCP server in [misc/mcp/](misc/mcp/README.md) gives any AI
+client this list in reading order, the rejected candidates with the rule
+each failed, every benchmark, and a searchable index of the linked sources
+themselves, built on the reader's own machine, so answers come from the
+sources and cite them. With [uv](https://docs.astral.sh/uv/) installed, one
+command adds it.
+
+**Claude Code**
+
+```sh
+claude mcp add --scope user cpu-perf -- uvx cpu-perf
+```
+
+**Codex**
+
+```sh
+codex mcp add cpu-perf -- uvx cpu-perf
+```
+
+Claude Desktop, Cursor and VS Code take a few lines of config, given in
+[Connect it](misc/mcp/README.md#connect-it).
 
 Section 1 is a path through the rest; read it top to bottom before using the
 numbered sections as a reference.

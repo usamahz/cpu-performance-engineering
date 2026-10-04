@@ -1,0 +1,102 @@
+{% extends "_base.html" %}
+{% import "_macros.html" as m with context %}
+
+{% macro extras(key) %}
+{% for label, html in b.extras_after.get(key, []) %}
+<div class="extra"><p class="label-mono">{{ label }}</p><div class="prose-lab">{{ html | safe }}</div></div>
+{% endfor %}
+{% endmacro %}
+
+{% macro block(n, title, id) %}
+<section class="block" id="{{ id }}" aria-labelledby="{{ id }}-h">
+  <h2 id="{{ id }}-h"><span class="n">{{ n }}</span><span class="t">{{ title }}</span></h2>
+  <div class="body">{{ caller() }}</div>
+</section>
+{% endmacro %}
+
+{% block main %}
+<article>
+  <header class="page-header bg-graph">
+    <div class="container-lab">
+      <p class="label-mono crumbs"><a href="/benchmarks/">{{ copy.benchmarks.title }}</a> / {{ b.slug }}</p>
+      <h1 class="page-title">{{ b.title }}</h1>
+      <p class="page-lede">{{ b.index_claim }}</p>
+      <div class="chips">
+        {% if b.section %}<a href="{{ b.section.url }}">§{{ b.section.number_label }} {{ b.section.title }}</a>{% endif %}
+        <span>{{ b.threads }}</span>
+        {% if b.neon %}<span>{{ copy.benchmarks.neon_yes }}</span>{% endif %}
+        {% if b.cflags %}<span>{{ b.cflags }}</span>{% endif %}
+        <a href="{{ b.file_urls.code }}" rel="noopener">{{ b.files.code.rsplit('/', 1)[-1] }} ↗</a>
+        <a href="{{ b.file_urls.raw }}" rel="noopener">results/raw.txt ↗</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="container-lab mt-8">
+    {{ m.passport(b) }}
+
+    {% call block("01", copy.benchmarks.block_claim, "claim") %}
+      <div class="prose-lab">{{ b.claim_html | safe }}</div>
+      {% if b.supports %}
+      <div class="supports">
+        <p class="label-mono">{{ copy.benchmarks.supports }}</p>
+        <ul>{% for e in b.supports %}<li><a href="{{ e.page }}">{{ e.title }}</a> <span class="muted">§{{ e.section }}</span></li>{% endfor %}</ul>
+      </div>
+      {% endif %}
+      {{ extras("claim") }}
+    {% endcall %}
+
+    {% call block("02", copy.benchmarks.block_method, "method") %}
+      <div class="prose-lab">{{ b.parts_html.method | safe }}</div>
+      {{ extras("method") }}
+    {% endcall %}
+
+    {% call block("03", copy.benchmarks.block_code, "generated-code") %}
+      <div class="prose-lab">{{ b.parts_html.generated_code | safe }}</div>
+      {{ extras("generated_code") }}
+    {% endcall %}
+
+    {% call block("04", copy.benchmarks.block_results, "results") %}
+      {% for chart in b.charts %}{{ m.chart_figure(chart) }}{% endfor %}
+      <p class="chart-note">{{ copy.benchmarks.chart_note }}</p>
+      <div class="prose-lab results-md">{{ b.results_html | safe }}</div>
+      {{ extras("results") }}
+    {% endcall %}
+
+    {% call block("05", copy.benchmarks.block_analysis, "analysis") %}
+      <div class="prose-lab">{{ b.parts_html.analysis | safe }}</div>
+      {{ extras("analysis") }}
+    {% endcall %}
+
+    {% call block("06", copy.benchmarks.block_limits, "limits") %}
+      <div class="prose-lab">{{ b.parts_html.limits | safe }}</div>
+      {{ extras("limits") }}
+    {% endcall %}
+
+    {% call block("07", copy.benchmarks.block_run, "reproduce") %}
+      <div class="prose-lab">{{ b.parts_html.reproduce | safe }}</div>
+      {{ extras("reproduce") }}
+      <details class="raw">
+        <summary>{{ copy.benchmarks.machine_raw }}</summary>
+        <pre tabindex="0"><code>{{ b.raw_header_text }}</code></pre>
+      </details>
+      <ul class="file-links">
+        {% for key, label in [("code", b.files.code.rsplit('/', 1)[-1]), ("build", "build.sh"), ("run", "run.sh"), ("raw", "results/raw.txt"), ("summary", "results/summary.md"), ("readme", "README.md")] if key in b.file_urls %}
+        <li><a href="{{ b.file_urls[key] }}" rel="noopener">{{ label }} ↗</a></li>
+        {% endfor %}
+        <li><a href="{{ b.url }}raw.txt">{{ copy.benchmarks.raw_copy }}</a></li>
+        <li><a href="{{ b.url }}results.json">{{ copy.benchmarks.results_json }}</a></li>
+      </ul>
+    {% endcall %}
+
+    {% call block("08", copy.benchmarks.block_server, "ask-the-server") %}
+      <p class="muted">{{ copy.benchmarks.server_text }}</p>
+      {{ m.resource(b.mcp_resource) }}
+      {{ m.prompt_cmd("reproduce_benchmark", b.slug) }}
+      <p class="small"><a class="link-primary" href="/mcp/workflows/#reproduce_benchmark">{{ copy.benchmarks.server_link }}</a></p>
+    {% endcall %}
+
+    {{ m.prevnext(b.prev, b.next, copy.benchmarks.prev, copy.benchmarks.next, "measure") }}
+  </div>
+</article>
+{% endblock %}

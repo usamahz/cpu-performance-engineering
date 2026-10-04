@@ -1,0 +1,40 @@
+{% extends "_base.html" %}
+{% import "_macros.html" as m with context %}
+{% set mv = site.mcp %}
+{% set topics = ["how-it-stays-honest", "safety-of-fetching", "copyright-and-politeness", "keeping-the-list-current", "serving-over-http"] %}
+{% block main %}
+{{ m.mcp_header(copy.mcp.nav_security, copy.mcp.security_heading, copy.mcp.security_lede) }}
+{{ m.mcp_nav(active) }}
+<div class="container-lab with-aside">
+  <div class="main mcp-doc">
+    {{ m.surface_missing() }}
+    {% for anchor in topics %}{% set sec = mv.find(anchor) %}{% if sec %}
+    <section aria-labelledby="{{ anchor }}">
+      <h2 class="h2-section" id="{{ anchor }}">{{ sec.title }}</h2>
+      <div class="prose-lab">{{ mv.body_html(anchor) | safe }}</div>
+    </section>
+    {% endif %}{% endfor %}
+    {% if mv.tools %}
+    <section aria-labelledby="annotations">
+      <h2 class="h2-section" id="annotations">{{ copy.mcp.annotations }}</h2>
+      <div class="table-wrap" tabindex="0"><table class="param-table annotations">
+        <thead><tr><th scope="col">{{ copy.mcp.annotations_tool }}</th><th scope="col">{{ copy.mcp.read_only }}</th><th scope="col">{{ copy.mcp.open_world }}</th><th scope="col">{{ copy.mcp.idempotent }}</th><th scope="col">{{ copy.mcp.destructive }}</th></tr></thead>
+        <tbody>
+        {% for t in mv.tools %}{% set a = t.get("annotations") or {} %}
+          <tr><td><a href="/mcp/tools/#tool-{{ t.name }}"><code>{{ t.name }}</code></a></td>
+          {% for key in ["readOnlyHint", "openWorldHint", "idempotentHint", "destructiveHint"] %}<td class="{{ 'flag-on' if a.get(key) else 'flag-off' }}">{{ copy.mcp.yes if a.get(key) else copy.mcp.no }}</td>{% endfor %}</tr>
+        {% endfor %}
+        </tbody>
+      </table></div>
+    </section>
+    {% endif %}
+  </div>
+  <aside class="aside">
+    <nav class="toc" aria-label="{{ copy.mcp.on_this_page }}">
+      <p class="label-mono">{{ copy.mcp.on_this_page }}</p>
+      <ul>{% for anchor in topics %}{% set sec = mv.find(anchor) %}{% if sec %}<li><a href="#{{ anchor }}">{{ sec.title }}</a></li>{% endif %}{% endfor %}
+      <li><a href="#annotations">{{ copy.mcp.annotations }}</a></li></ul>
+    </nav>
+  </aside>
+</div>
+{% endblock %}

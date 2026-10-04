@@ -1,0 +1,74 @@
+{% extends "_base.html" %}
+{% import "_macros.html" as m with context %}
+{% set mv = site.mcp %}
+{% block main %}
+<header class="mcp-hero">
+  <div class="container-lab mcp-hero-grid">
+    <div>
+      <p class="label-mono">{{ copy.mcp.eyebrow }}</p>
+      <h1>{{ copy.mcp.heading }}</h1>
+      <p class="lede">{{ mv.lede_html | safe }}</p>
+      <div class="ctas">
+        <a class="btn btn-primary" href="/mcp/quickstart/">{{ copy.mcp.cta_quickstart }}</a>
+        <a class="btn btn-ink" href="/mcp/tools/">{{ copy.mcp.cta_tools }}</a>
+      </div>
+    </div>
+    <div class="mcp-status">
+      {% if mv.surface %}
+      <dl>
+        <div><dt>{{ copy.mcp.version }}</dt><dd>{{ mv.server.version }}</dd></div>
+        <div><dt>{{ copy.mcp.protocol }}</dt><dd>{{ mv.protocol }}</dd></div>
+        <div><dt>{{ copy.mcp.tools }}</dt><dd>{{ mv.tools | length }}</dd></div>
+        <div><dt>{{ copy.mcp.prompts }}</dt><dd>{{ mv.prompts | length }}</dd></div>
+        <div><dt>{{ copy.mcp.resources }}</dt><dd>{{ mv.resources | length }}</dd></div>
+        <div><dt>{{ copy.mcp.templates }}</dt><dd>{{ mv.templates | length }}</dd></div>
+      </dl>
+      {% endif %}
+      {% for label, cmd in ((copy.mcp.install_claude, "claude mcp add --scope user cpu-perf -- uvx cpu-perf"), (copy.mcp.install_codex, "codex mcp add cpu-perf -- uvx cpu-perf")) %}
+      <div class="terminal">
+        <div class="terminal-bar"><span>{{ label }}</span>{{ m.copy_button(cmd) }}</div>
+        <pre tabindex="0"><code>{{ cmd }}</code></pre>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</header>
+{{ m.mcp_nav(active) }}
+
+<div class="container-lab mcp-body">
+  {{ m.surface_missing() }}
+  <section aria-labelledby="knows">
+    {{ m.eyebrow(copy.mcp.layers_label) }}
+    <h2 class="sr-only" id="knows">{{ copy.mcp.layers_label }}</h2>
+    <div class="prose-lab knows">{{ mv.knows_html | safe }}</div>
+  </section>
+
+  <section aria-labelledby="flow">
+    {{ m.eyebrow(copy.mcp.flow_eyebrow) }}
+    <h2 class="h2" id="flow">{{ copy.home.flow_label }}</h2>
+    <ol class="flow flow-6">
+      {% for step in copy.home.flow %}<li><span class="k">{{ step.k }}</span><p class="t">{{ step.t }}</p><p class="d">{{ step.d }}</p></li>
+      {% endfor %}
+    </ol>
+    <p class="small flow-more"><a class="link-primary" href="/mcp/workflows/#use-it-for-your-own-work">{{ copy.mcp.nav_workflows }} →</a></p>
+  </section>
+
+  <section aria-labelledby="cases">
+    {{ m.eyebrow(copy.mcp.cases_eyebrow) }}
+    <h2 class="h2" id="cases">{{ copy.mcp.cases_heading }}</h2>
+    <p class="muted cases-note">{{ copy.mcp.cases_note }}</p>
+    <ul class="cases">
+      {% for ex in mv.routed_examples %}
+      <li>
+        <div class="q-row"><p class="q">{{ mv.example_html(ex.question) | safe }}</p>{{ m.copy_button(ex.question, copy.mcp.copy_question) }}</div>
+        <ul class="routes">
+          {% for r in ex.results[:3] %}{% set ref = site.resolve_ref(r.id) %}{% if ref %}
+          <li><span class="tag tag-{{ ref.kind }}">{{ ref.tag }}</span><a href="{{ ref.url }}">{{ ref.label }}</a></li>
+          {% endif %}{% endfor %}
+        </ul>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "_base.html" %}
+{% import "_macros.html" as m with context %}
+{% set mv = site.mcp %}
+{% set ts = mv.tools_section() %}
+{% set own = mv.find("use-it-for-your-own-work") %}
+{% block main %}
+{{ m.mcp_header(copy.mcp.nav_workflows, copy.mcp.workflows_heading, copy.mcp.workflows_lede) }}
+{{ m.mcp_nav(active) }}
+<div class="container-lab with-aside">
+  <div class="main mcp-doc">
+    {{ m.surface_missing() }}
+    {% if ts.prompts_html %}<div class="prose-lab muted-text">{{ ts.prompts_html | safe }}</div>{% endif %}
+    <ol class="workflow-list">
+      {% for p in mv.prompts %}
+      <li id="{{ p.name }}">
+        <span class="wn">{{ "%02d" % loop.index }}</span>
+        <div class="wbody">
+          <h2 class="wtitle">{{ p.get("title") or p.name }}</h2>
+          <p class="muted">{{ p.get("description") | squash }}</p>
+          {% if p.get("arguments") %}
+          <dl class="args-list">
+            {% for a in p.get("arguments") %}<div><dt><code>{{ a.name }}</code> <span class="{{ 'req' if a.get("required") else 'opt' }}">{{ copy.mcp.required if a.get("required") else copy.mcp.optional }}</span></dt>{% if a.get("description") %}<dd>{{ a.get("description") | squash }}</dd>{% endif %}</div>{% endfor %}
+          </dl>
+          {% endif %}
+          {{ m.prompt_cmd(p.name, "", False) }}
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+    {% if own %}
+    <section aria-labelledby="use-it-for-your-own-work">
+      <h2 class="h2-section" id="use-it-for-your-own-work">{{ own.title }}</h2>
+      <div class="prose-lab">{{ mv.body_html("use-it-for-your-own-work") | safe }}</div>
+    </section>
+    {% endif %}
+  </div>
+  <aside class="aside">
+    <nav class="toc" aria-label="{{ copy.mcp.on_this_page }}">
+      <p class="label-mono">{{ copy.mcp.on_this_page }}</p>
+      <ul class="mono-list">{% for p in mv.prompts %}<li><a href="#{{ p.name }}">{{ p.name }}</a></li>{% endfor %}
+      {% if own %}<li><a href="#use-it-for-your-own-work">{{ own.title }}</a></li>{% endif %}</ul>
+    </nav>
+  </aside>
+</div>
+{% endblock %}

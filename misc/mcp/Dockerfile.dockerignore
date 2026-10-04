@@ -1,0 +1,15 @@
+.git
+**/__pycache__
+**/.pytest_cache
+**/*.avif
+**/*.o
+**/*.s
+**/*.dSYM
+misc/benchmarks/*/bench
+misc/benchmarks/*/bench_*
+misc/benchmarks/*/results/quick-*
+misc/benchmarks/common/clock_estimate
+misc/mcp/.venv
+misc/mcp/dist
+link-report.md
+links.json

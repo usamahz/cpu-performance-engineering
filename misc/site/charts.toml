@@ -1,0 +1,522 @@
+# Charts for the benchmark lab, drawn from the RESULT lines in each
+# benchmark's results/raw.txt. Nothing here is a number: every value a chart
+# plots, and every reference line, is read from the committed run, so a new
+# run redraws the charts with no edit to this file. The build stops when a
+# benchmark has no chart, when a series matches no RESULT line, when a unit
+# disagrees with its axis, when a key repeats across segments without a
+# segment, or when a value cannot sit on its axis.
+#
+#   benchmark   directory name under misc/benchmarks/
+#   id          unique within the benchmark; the figure is #chart-<id>
+#   type        line | scatter | bar | dot | roofline
+#   title       the figure's caption; {=key} quotes a RESULT value
+#   metric      what the values are and which statistic
+#   x, y        scale (linear, log2, log10, category), unit, label,
+#               format ("bytes"), zero, ticks ("data"), order and labels
+#               for categories; y is the value axis in every chart type
+#   facet       one panel per value of a captured group: from, order,
+#               label or labels, units (when panels measure different
+#               things); facet_columns = 1 stacks the panels
+#   series      name, short (a label at the end of a line), match (a
+#               regex over RESULT keys, with named groups), segment, low
+#               and high (keys for a range), x_key (a key whose value is
+#               the x), point_label, every_facet
+#   refs        reference lines: axis (x, y, diagonal), key or header and
+#               pattern, label ({value} is the value with its unit), dash
+
+# ---- 02 -------------------------------------------------------------------
+[[chart]]
+benchmark = "02-branch-misprediction"
+id = "cycles"
+type = "bar"
+title = "Cycles per element by kernel, unsorted against sorted data"
+metric = "cycles per element, from the median"
+[chart.x]
+from = "k"
+order = ["branchy", "branchless", "vector"]
+[chart.x.labels]
+branchy = "branchy (if)"
+branchless = "branchless (csel)"
+vector = "vector (NEON)"
+[chart.y]
+unit = "cycles/elem"
+label = "cycles per element"
+[chart.facet]
+from = "t"
+order = ["128", "243"]
+label = "Threshold {t}: condition true for a fraction {=t[t]_cond_true}"
+[[chart.series]]
+name = "Unsorted data"
+match = '^t(?P<t>128|243)_unsorted_(?P<k>branchy|branchless|vector)_cycles$'
+[[chart.series]]
+name = "Sorted data"
+match = '^t(?P<t>128|243)_sorted_(?P<k>branchy|branchless|vector)_cycles$'
+
+# ---- 03 -------------------------------------------------------------------
+[[chart]]
+benchmark = "03-latency-vs-throughput"
+id = "accumulators"
+type = "line"
+title = "Float sum throughput against independent accumulators"
+metric = "elements per cycle, from the median"
+[chart.x]
+from = "n"
+scale = "log2"
+ticks = "data"
+label = "independent accumulators"
+[chart.y]
+unit = "elem/cycle"
+label = "elements per cycle"
+zero = true
+[[chart.series]]
+name = "float array sum"
+match = '^fsum_acc(?P<n>\d+)_per_cycle$'
+[[chart.refs]]
+axis = "y"
+key = "asm_fadd_indep16_per_cycle"
+label = "fadd, 16 independent chains (asm): {value}"
+[[chart.refs]]
+axis = "y"
+key = "asm_fadd_chain_per_cycle"
+label = "fadd, one chain (asm): {value}"
+
+# ---- 04 -------------------------------------------------------------------
+[[chart]]
+benchmark = "04-cache-latency"
+id = "latency"
+type = "line"
+title = "Dependent-load latency against the bytes a walk covers"
+metric = "ns per load, min of {=runs} runs"
+[chart.x]
+from = "bytes"
+scale = "log2"
+format = "bytes"
+label = "working set (line mode) or span (page mode)"
+[chart.y]
+scale = "log10"
+unit = "ns/load"
+label = "ns per load"
+[[chart.series]]
+name = "Line mode: 128-byte nodes packed 128 bytes apart"
+short = "line mode"
+match = '^line_(?P<bytes>\d+)_ns$'
+[[chart.series]]
+name = "Page mode: one 128-byte node per page"
+short = "page mode"
+match = '^page_(?P<bytes>\d+)_ns$'
+[[chart.refs]]
+axis = "x"
+header = "P-core L1d"
+pattern = '^(\d+) B'
+label = "L1d {value}"
+[[chart.refs]]
+axis = "x"
+header = "P-core L1d"
+pattern = 'L2 \(shared per cluster of \d+\): (\d+) B'
+label = "L2 {value}"
+
+# ---- 05 -------------------------------------------------------------------
+[[chart]]
+benchmark = "05-measurement-pitfalls"
+id = "passes"
+type = "dot"
+title = "Time per pass by how the result is used, and warm against cold"
+metric = "ns per pass, median, with the min and the max"
+[chart.x]
+from = "v"
+order = ["p1_discarded", "p1_sink", "p1_checksum", "p2_inproc", "p2_fresh", "p3_cold"]
+[chart.x.labels]
+p1_discarded = "(a) result discarded"
+p1_sink = "(b) result passed to SINK()"
+p1_checksum = "(c) result stored for the checksum"
+p2_inproc = "warm passes, one process"
+p2_fresh = "warm pass, one per fresh process"
+p3_cold = "cold first pass, one per fresh process"
+[chart.y]
+unit = "ns"
+label = "ns per pass"
+[[chart.series]]
+name = "median, with the min and the max"
+match = '^(?P<v>p1_discarded|p1_sink|p1_checksum|p2_inproc|p2_fresh|p3_cold)_median_ns$'
+low = "{v}_min_ns"
+high = "{v}_max_ns"
+
+[[chart]]
+benchmark = "05-measurement-pitfalls"
+id = "pairs"
+type = "bar"
+title = "Pairs of identical warm passes that differ by more than a threshold"
+metric = "percent of pairs"
+[chart.x]
+from = "pct"
+order = ["2", "5", "10"]
+label = "difference between the two passes of a pair"
+[chart.x.labels]
+"2" = "more than 2 percent"
+"5" = "more than 5 percent"
+"10" = "more than 10 percent"
+[chart.y]
+unit = "percent"
+label = "percent of pairs"
+[[chart.series]]
+name = "pairs within one process"
+match = '^p2_inproc_pairs_over_(?P<pct>\d+)pct$'
+[[chart.series]]
+name = "pairs across fresh processes"
+match = '^p2_fresh_pairs_over_(?P<pct>\d+)pct$'
+
+# ---- 06 -------------------------------------------------------------------
+[[chart]]
+benchmark = "06-roofline"
+id = "roofline"
+type = "roofline"
+title = "Five kernels against the measured roofs"
+metric = "GFLOP/s, median over {=reps} timed passes"
+[chart.x]
+unit = "flop/B"
+label = "arithmetic intensity, flop/B"
+[chart.y]
+unit = "GFLOP/s"
+label = "GFLOP/s"
+[chart.facet]
+from = "t"
+order = ["1", "10"]
+[chart.facet.labels]
+"1" = "One thread"
+"10" = "Ten threads, one per P-core"
+[[chart.series]]
+name = "from DRAM"
+match = '^(?P<k>poly_intrin|poly|saxpy|stencil|fma_stream)_(?P<t>1|10)t$'
+x_key = "{k}_ai"
+point_label = "{k}"
+[[chart.series]]
+name = "from an L1-resident slice"
+match = '^(?P<k>poly_intrin|poly|saxpy|stencil|fma_stream)_l1_(?P<t>1|10)t$'
+x_key = "{k}_ai"
+point_label = "{k}"
+[[chart.refs]]
+axis = "y"
+key = "fma_peak_{t}t"
+label = "FMA peak {value}"
+[[chart.refs]]
+axis = "diagonal"
+key = "read_bw_{t}t"
+label = "read roof"
+dash = 0
+[[chart.refs]]
+axis = "diagonal"
+key = "copy_bw_{t}t"
+label = "copy roof"
+dash = 1
+[[chart.refs]]
+axis = "diagonal"
+key = "triad_bw_{t}t"
+label = "triad roof"
+dash = 2
+
+# ---- 07 -------------------------------------------------------------------
+[[chart]]
+benchmark = "07-aos-vs-soa-simd"
+id = "layouts"
+type = "bar"
+title = "Cycles per record by layout and code generation, data from memory"
+metric = "cycles per record, from the median"
+facet_columns = 1
+[chart.x]
+from = "v"
+order = ["aos_scalar", "aos_o2", "soa_scalar", "soa_strict", "soa_o2", "soa_neon"]
+[chart.x.labels]
+aos_scalar = "aos_scalar, no vectoriser"
+aos_o2 = "aos_o2"
+soa_scalar = "soa_scalar, no vectoriser"
+soa_strict = "soa_strict, strict IEEE order"
+soa_o2 = "soa_o2"
+soa_neon = "soa_neon, intrinsics"
+[chart.y]
+unit = "cycles/rec"
+label = "cycles per record"
+[chart.facet]
+from = "k"
+order = ["sum3", "dot37"]
+[chart.facet.labels]
+sum3 = "sum3: the sum of field 3"
+dot37 = "dot37: the sum of field 3 times field 7"
+[[chart.series]]
+name = "cycles per record"
+match = '^(?P<k>sum3|dot37)_(?P<v>aos_scalar|aos_o2|soa_scalar|soa_strict|soa_o2|soa_neon)_cycles$'
+
+# ---- 08 -------------------------------------------------------------------
+[[chart]]
+benchmark = "08-autovectorization-aliasing"
+id = "variants"
+type = "bar"
+title = "Time per element by loop form and build"
+metric = "ns per element, median over the timed samples"
+facet_columns = 1
+[chart.x]
+from = "v"
+order = ["plain", "restrict", "pragma", "stride", "last", "scalar", "plain_inplace", "pragma_inplace"]
+[chart.x.labels]
+plain_inplace = "plain in place"
+pragma_inplace = "pragma in place"
+[chart.y]
+unit = "ns/elem"
+label = "ns per element"
+[chart.facet]
+from = "n"
+order = ["4194304", "8192"]
+label = "{n} floats per array"
+[[chart.series]]
+name = "-O2"
+match = '^O2_n(?P<n>\d+)_(?P<v>plain|restrict|pragma|stride|last|scalar|plain_inplace|pragma_inplace)_median$'
+[[chart.series]]
+name = "-O2 -fno-unroll-loops"
+match = '^O2nu_n(?P<n>\d+)_(?P<v>plain|restrict|pragma|stride|last|scalar|plain_inplace|pragma_inplace)_median$'
+[[chart.series]]
+name = "-O3"
+match = '^O3_n(?P<n>\d+)_(?P<v>plain|restrict|pragma|stride|last|scalar|plain_inplace|pragma_inplace)_median$'
+
+# ---- 09 -------------------------------------------------------------------
+[[chart]]
+benchmark = "09-false-sharing"
+id = "scaling"
+type = "line"
+title = "Time per increment against threads, by counter layout"
+metric = "ns per increment per thread, median"
+[chart.x]
+from = "t"
+scale = "log2"
+ticks = "data"
+label = "threads"
+[chart.y]
+scale = "log10"
+unit = "ns"
+label = "ns per increment"
+[chart.facet]
+from = "op"
+order = ["store", "atomic"]
+[chart.facet.labels]
+store = "Plain store increments"
+atomic = "Atomic increments"
+[[chart.series]]
+name = "adjacent counters, 8 B apart"
+short = "adjacent"
+match = '^(?P<op>store|atomic)_adjacent_t(?P<t>\d+)_median$'
+[[chart.series]]
+name = "padded to 64 B"
+short = "pad64"
+match = '^(?P<op>store|atomic)_pad64_t(?P<t>\d+)_median$'
+[[chart.series]]
+name = "padded to 128 B"
+short = "pad128"
+match = '^(?P<op>store|atomic)_pad128_t(?P<t>\d+)_median$'
+[[chart.series]]
+name = "register, one store at the end"
+short = "register"
+match = '^register_t(?P<t>\d+)_median$'
+every_facet = true
+
+# ---- 10 -------------------------------------------------------------------
+[[chart]]
+benchmark = "10-first-touch"
+id = "pages"
+type = "dot"
+title = "Cost per page by step, from first touch to munmap"
+metric = "ns per page, min over {=reps} reps, with the range to the max"
+[chart.x]
+from = "p"
+order = ["pass1", "pass2", "pass2r", "malloc_touch", "malloc_retouch", "munmap"]
+[chart.x.labels]
+pass1 = "pass 1, first touch"
+pass2 = "pass 2, second touch"
+pass2r = "pass 2 repeated, third touch"
+malloc_touch = "malloc then first touch"
+malloc_retouch = "malloc then second touch"
+munmap = "munmap, whole buffer"
+[chart.y]
+scale = "log10"
+unit = "ns/page"
+label = "ns per page"
+[[chart.series]]
+name = "min, with the range to the max"
+match = '^(?P<p>pass1|pass2|pass2r|malloc_touch|malloc_retouch|munmap)_min$'
+low = "{p}_min"
+high = "{p}_max"
+
+# ---- 11 -------------------------------------------------------------------
+[[chart]]
+benchmark = "11-syscall-cost"
+id = "calls"
+type = "line"
+title = "Time per call against bytes per call, pread against memcpy"
+metric = "ns per call, min over {=reps} runs"
+[chart.x]
+from = "bytes"
+scale = "log2"
+format = "bytes"
+ticks = "data"
+label = "bytes per call"
+[chart.y]
+scale = "log10"
+unit = "ns/call"
+label = "ns per call"
+[[chart.series]]
+name = "pread from a file in the page cache"
+short = "pread"
+match = '^pread_(?P<bytes>\d+)_min$'
+[[chart.series]]
+name = "memcpy of the same bytes"
+short = "memcpy"
+match = '^memcpy_(?P<bytes>\d+)_min$'
+[[chart.refs]]
+axis = "y"
+key = "getppid_min"
+label = "getppid {value}"
+[[chart.refs]]
+axis = "y"
+key = "clock_gettime_min"
+label = "clock_gettime {value}"
+
+# ---- 12 -------------------------------------------------------------------
+[[chart]]
+benchmark = "12-coordinated-omission"
+id = "percentiles"
+type = "line"
+title = "Recorded latency by percentile, one schedule, three ways of timing it"
+metric = "us, median over reps"
+[chart.x]
+from = "q"
+scale = "category"
+order = ["p50", "p90", "p99", "p999", "max"]
+label = "statistic"
+[chart.x.labels]
+p999 = "p99.9"
+[chart.y]
+scale = "log10"
+unit = "us"
+label = "latency, us"
+[[chart.series]]
+name = "closed loop, from the actual send"
+short = "closed"
+match = '^closed_(?P<q>p50|p90|p99|p999|max)_median$'
+[[chart.series]]
+name = "open loop, from the intended send"
+short = "open"
+match = '^open_(?P<q>p50|p90|p99|p999|max)_median$'
+[[chart.series]]
+name = "closed loop, corrected"
+short = "corrected"
+match = '^corrected_(?P<q>p50|p90|p99|p999|max)_median$'
+
+# ---- 13 -------------------------------------------------------------------
+[[chart]]
+benchmark = "13-sgemm-naive-vs-blas"
+id = "sgemm"
+type = "dot"
+title = "SGEMM throughput by implementation"
+metric = "GFLOP/s, median"
+[chart.x]
+from = "i"
+order = ["naive_ijk", "ikj_autovec", "blocked_neon_8x8", "blas_threads_1", "blas_threads_default"]
+[chart.x.labels]
+naive_ijk = "naive i-j-k triple loop"
+ikj_autovec = "i-k-j, auto-vectorised"
+blocked_neon_8x8 = "blocked, 8x8 NEON tile"
+blas_threads_1 = "Accelerate, 1 thread"
+blas_threads_default = "Accelerate, default threads"
+[chart.y]
+scale = "log10"
+unit = "GFLOP/s"
+label = "GFLOP/s"
+[[chart.series]]
+name = "median GFLOP/s"
+match = '^(?P<i>naive_ijk|ikj_autovec|blocked_neon_8x8|blas_threads_1|blas_threads_default)_gflops$'
+[[chart.refs]]
+axis = "y"
+key = "neon_fma_peak_gflops"
+label = "NEON FMA peak {value}"
+
+[[chart]]
+benchmark = "13-sgemm-naive-vs-blas"
+id = "dot-product"
+type = "bar"
+title = "Dot product rate, int8 sdot against float32 fmla"
+metric = "ops per ns, median"
+[chart.x]
+from = "w"
+order = ["stream", "l1"]
+[chart.x.labels]
+stream = "streaming"
+l1 = "L1-resident"
+[chart.y]
+unit = "ops/ns"
+label = "ops per ns"
+[[chart.series]]
+name = "int8 sdot"
+match = '^dot_int8_sdot_(?P<w>stream|l1)_opsns$'
+[[chart.series]]
+name = "f32 fmla"
+match = '^dot_f32_fmla_(?P<w>stream|l1)_opsns$'
+
+# ---- 14 -------------------------------------------------------------------
+[[chart]]
+benchmark = "14-pcore-vs-ecore"
+id = "placement"
+type = "dot"
+title = "Clock, FMA rate and stream rate by placement"
+metric = "the clock is the min, the two rates the median; wall time"
+facet_columns = 1
+[chart.x]
+from = "pl"
+order = ["main_default", "thread_default", "thread_background", "process_background"]
+[chart.x.labels]
+main_default = "main thread, as spawned"
+thread_default = "pthread, no QoS call"
+thread_background = "pthread, QOS_CLASS_BACKGROUND"
+process_background = "main thread, taskpolicy -c background"
+[chart.facet]
+from = "m"
+order = ["clock_ghz", "fma_gflops", "stream_gbps"]
+[chart.facet.labels]
+clock_ghz = "Clock, GHz (min)"
+fma_gflops = "FMA, GFLOP/s"
+stream_gbps = "Stream, GB/s"
+[chart.facet.units]
+clock_ghz = "GHz"
+fma_gflops = "GFLOP/s"
+stream_gbps = "GB/s"
+[[chart.series]]
+name = "wall time"
+match = '^(?P<pl>main_default|thread_default|thread_background|process_background)_(?P<m>clock_ghz|fma_gflops|stream_gbps)$'
+
+# ---- 15 -------------------------------------------------------------------
+[[chart]]
+benchmark = "15-stream-bandwidth"
+id = "triad"
+type = "line"
+title = "STREAM triad bandwidth against threads"
+metric = "GB/s, median over {=reps} rounds, band from the min to the best"
+[chart.x]
+from = "t"
+ticks = "data"
+label = "threads"
+[chart.y]
+unit = "GB/s"
+label = "GB/s"
+zero = true
+[[chart.series]]
+name = "1 MiB per thread, from L2"
+short = "1 MiB"
+match = '^triad_1MiB_t(?P<t>\d+)_median$'
+low = "triad_1MiB_t{t}_min"
+high = "triad_1MiB_t{t}_best"
+[[chart.series]]
+name = "512 MiB per array, from memory"
+short = "512 MiB"
+match = '^triad_512MiB_t(?P<t>\d+)_median$'
+low = "triad_512MiB_t{t}_min"
+high = "triad_512MiB_t{t}_best"
+[[chart.refs]]
+axis = "y"
+key = "vendor_bandwidth"
+label = "vendor figure {value}"

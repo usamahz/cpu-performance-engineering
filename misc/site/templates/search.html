@@ -1,0 +1,14 @@
+{% extends "_base.html" %}
+{% import "_macros.html" as m with context %}
+{% block main %}
+{% call m.page_header(copy.search.eyebrow, copy.search.heading) %}{% endcall %}
+<div class="container-lab mt-8" id="search-app">
+  <form role="search" action="/search/" method="get" class="search-form">
+    <label class="label-mono" for="q">{{ copy.search.label }}</label>
+    <input class="search-box" id="q" name="q" type="search" placeholder="{{ copy.search.placeholder }}" autocomplete="off" autofocus>
+  </form>
+  <p class="search-status" data-status aria-live="polite"></p>
+  <noscript><p class="notice-inline">{{ copy.search.noscript }} <a class="link-primary" href="/learn/all/">{{ copy.all.title }}</a></p></noscript>
+  <ul class="results" data-results></ul>
+</div>
+{% endblock %}

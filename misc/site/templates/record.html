@@ -1,0 +1,53 @@
+{% extends "_base.html" %}
+{% import "_macros.html" as m with context %}
+{% import "_record.html" as rec with context %}
+{% block main %}
+<article data-filter-scope>
+  {% call m.page_header('<a href="/evidence/">' ~ copy.evidence.title ~ '</a> / ' ~ copy.record.title, copy.record.heading, copy.record.lede) %}
+  <p class="jump-links">
+    <a href="#rejected">{{ copy.record.rejected }} <span>{{ site.rejected | length }}</span></a>
+    <a href="#claims">{{ copy.record.claims }} <span>{{ site.claims | length }}</span></a>
+    <a href="/evidence/record/link-notes/">{{ copy.record.link_notes }} <span>{{ site.link_notes | length }}</span></a>
+  </p>
+  {% endcall %}
+
+  <div class="container-lab mt-10">
+    <div class="filters" data-filter-for="record" data-filter-items="li[data-item]" data-filter-groups=".record-group" role="group" aria-label="{{ copy.record.filter }}" hidden>
+      <label><span class="label-mono">{{ copy.record.filter }}</span><input class="field wide" type="search" data-filter-text placeholder="{{ copy.record.filter_placeholder }}"></label>
+      {{ rec.section_select() }}
+      <label><span class="label-mono">{{ copy.record.category }}</span>
+        <select class="field" data-filter-field="category"><option value="">{{ copy.record.category_all }}</option>{% for key, label in copy.record.categories.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select>
+      </label>
+      <label><span class="label-mono">{{ copy.record.verdict }}</span>
+        <select class="field" data-filter-field="verdict"><option value="">{{ copy.record.verdict_all }}</option>{% for key, label in copy.record.verdicts.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select>
+      </label>
+      <label><span class="label-mono">{{ copy.record.missing }}</span>
+        <select class="field" data-filter-field="missing"><option value="">{{ copy.record.missing_any }}</option>{% for f in site.seven_fields %}<option value="{{ loop.index }}">{{ loop.index }} {{ f }}</option>{% endfor %}</select>
+      </label>
+      <span class="count" data-filter-count aria-live="polite"></span>
+    </div>
+
+    <section id="rejected" class="record-part" aria-labelledby="rejected-h">
+      <h2 class="h2-section" id="rejected-h">{{ copy.record.rejected }} <span class="count-pill">{{ site.rejected | length }}</span></h2>
+      {% for n, items in site.rejected | groupby("section") %}
+      <section class="record-group">
+        {{ rec.section_head(n) }}
+        <ol class="record-list">{% for r in items %}{{ rec.rejected_row(r) }}{% endfor %}</ol>
+      </section>
+      {% endfor %}
+    </section>
+
+    <section id="claims" class="record-part" aria-labelledby="claims-h">
+      <h2 class="h2-section" id="claims-h">{{ copy.record.claims }} <span class="count-pill">{{ site.claims | length }}</span></h2>
+      {% for n, items in site.claims | groupby("section") %}
+      <section class="record-group">
+        {{ rec.section_head(n) }}
+        <ol class="record-list">{% for c in items %}{{ rec.claim_row(c) }}{% endfor %}</ol>
+      </section>
+      {% endfor %}
+    </section>
+
+    <p class="mt-10"><a class="link-primary" href="/evidence/record/link-notes/">{{ copy.record.all_notes }}</a></p>
+  </div>
+</article>
+{% endblock %}

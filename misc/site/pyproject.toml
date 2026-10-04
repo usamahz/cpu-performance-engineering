@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cpu-perf-site"
+version = "0"
+description = "The website for the CPU Performance Engineering list, generated from the repository at one commit."
+requires-python = ">=3.11"
+license = "MIT"
+classifiers = ["Private :: Do Not Upload"]
+dependencies = [
+    "jinja2>=3.1,<4",
+    "markdown-it-py>=3,<5",
+    "pillow>=10",
+]
+
+[project.optional-dependencies]
+# Browser tests: Playwright drives Chrome or Chromium, axe-core scans each page.
+e2e = [
+    "playwright==1.56.0",
+    "axe-playwright-python==0.1.8",
+]
+
+[tool.setuptools]
+# Templates, static files and the TOML files are read from this directory,
+# so install it editable: pip install -e misc/site
+packages = ["cpu_perf_site", "cpu_perf_site.charts"]
