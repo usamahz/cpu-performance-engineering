@@ -158,7 +158,7 @@ def test_chunks_respect_pages_and_size():
 # ----- store, crawl and retrieval --------------------------------------------------------------
 
 
-def build(tmp_path, site, embedder=None):
+def build(tmp_path, site, embedder=None, respect_robots=False):
     targets = [
         target(site.url("/papers/false-sharing.pdf"), ("4.3.5",), (4,), "False sharing paper"),
         target(site.url("/content-details/manual.html"), ("2.4.2",), (2,), "Optimization manual"),
@@ -170,7 +170,7 @@ def build(tmp_path, site, embedder=None):
     ]
     corpus = SimpleNamespace(targets=targets)
     store = Store(tmp_path / "library.sqlite")
-    crawler = Crawler(corpus, store, local_fetcher(), embedder, workers=3)
+    crawler = Crawler(corpus, store, local_fetcher(), embedder, workers=3, respect_robots=respect_robots)
     return corpus, store, crawler
 
 
@@ -185,7 +185,7 @@ def test_crawl_index_and_search(tmp_path, site):
     landing = rows[site.url("/content-details/manual.html")]
     assert landing.status == "indexed" and landing.doc_url.endswith("/docs/manual.pdf")
     assert rows[site.url("/forbidden")].status == "blocked"
-    assert rows[site.url("/private/secret.html")].status == "blocked"
+    assert rows[site.url("/private/secret.html")].status == "indexed"  # a listed link is read, robots.txt or not
     assert rows[site.url("/sheet.xlsx")].status == "indexed"
     counts = store.counts()
     assert counts["vectors"] == counts["chunks"] > 0
@@ -205,6 +205,14 @@ def test_crawl_index_and_search(tmp_path, site):
     assert boosted[0].source_url.endswith("false-sharing.pdf") and "listed-for-topic" in boosted[0].signals
     only6, _ = r.search("roofline bandwidth", sections={6}, limit=5)
     assert only6 and all(6 in p.sections for p in only6)
+
+
+def test_robots_txt_on_request(tmp_path, site):
+    _, store, crawler = build(tmp_path, site, None, respect_robots=True)
+    crawler.run(only=[site.url("/private/secret.html"), site.url("/article.html")])
+    row = store.source(site.url("/private/secret.html"))
+    assert row.status == "blocked" and "robots.txt" in (row.detail or "")
+    assert store.source(site.url("/article.html")).status == "indexed"
 
 
 def test_keyword_only_and_resume(tmp_path, site):

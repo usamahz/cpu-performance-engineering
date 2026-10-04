@@ -3,6 +3,7 @@ writer lock, migrations and live-fetch concurrency."""
 
 from __future__ import annotations
 
+import multiprocessing as mp
 import sqlite3
 import subprocess
 import sys
@@ -91,6 +92,33 @@ def test_readonly_store_writes_nothing(tmp_path, site):
     ro = Store(path, readonly=True)
     assert ro.source(site.url("/article.html")) is not None
     assert sorted(p.name for p in tmp_path.iterdir()) == before
+
+
+def _open_fresh(barrier, root, rounds, out):
+    errors = []
+    for k in range(rounds):
+        barrier.wait()
+        try:
+            store = Store(f"{root}/lib{k}.sqlite")
+            store.generation()
+            store.close()
+        except Exception as exc:  # noqa: BLE001 - every failure is reported
+            errors.append(f"{type(exc).__name__}: {exc}")
+    out.put(errors)
+
+
+def test_clients_starting_together_open_a_new_library(tmp_path):
+    """Two clients started at once both create the library: SQLite answers
+    'database is locked' at once while one switches the new file to WAL."""
+    ctx = mp.get_context("spawn")
+    barrier, out = ctx.Barrier(6), ctx.Queue()
+    procs = [ctx.Process(target=_open_fresh, args=(barrier, str(tmp_path), 20, out)) for _ in range(6)]
+    for p in procs:
+        p.start()
+    errors = [e for _ in procs for e in out.get(timeout=300)]
+    for p in procs:
+        p.join(timeout=60)
+    assert errors == []
 
 
 HOLDER = textwrap.dedent(

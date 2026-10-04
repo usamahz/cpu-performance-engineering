@@ -71,7 +71,7 @@ class LibraryService:
         embed_model: str | None = None,
         auto_index: bool = True,
         live_fetch: bool = True,
-        respect_robots: bool = True,
+        respect_robots: bool = False,
         workers: int = 6,
         max_pages: int = 2500,
         fetcher: Fetcher | None = None,

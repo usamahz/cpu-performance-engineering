@@ -26,7 +26,11 @@ def _common(p: argparse.ArgumentParser) -> None:
     p.add_argument("--data-dir", default=os.environ.get("CPU_PERF_DATA_DIR"), help="where the source library lives")
     p.add_argument("--embed-model", default=os.environ.get("CPU_PERF_EMBED_MODEL"), help="model2vec model id, 'hashing', or 'none' for keyword search only")
     p.add_argument("--no-library", action="store_true", default=not _env_bool("CPU_PERF_LIBRARY", True), help="repository knowledge only: no source library")
-    p.add_argument("--ignore-robots", action="store_true", default=_env_bool("CPU_PERF_IGNORE_ROBOTS", False), help="crawl even where robots.txt disallows")
+    p.add_argument(
+        "--respect-robots", action="store_true", default=_env_bool("CPU_PERF_RESPECT_ROBOTS", False),
+        help="skip what robots.txt disallows (by default the listed links are read, as a reader opening them would)",
+    )
+    p.add_argument("--ignore-robots", action="store_true", help=argparse.SUPPRESS)  # the default now; still accepted
     p.add_argument("--no-auto-update", action="store_true", default=not _env_bool("CPU_PERF_AUTO_UPDATE", True), help="serve the installed copy of the list; no daily check for a newer one")
     p.add_argument("--log-level", default=os.environ.get("CPU_PERF_LOG_LEVEL", "WARNING"))
 
@@ -96,7 +100,7 @@ def _brain(args, *, auto_index: bool, live_fetch: bool, library: bool = True, wo
             embed_model=args.embed_model,
             auto_index=auto_index,
             live_fetch=live_fetch,
-            respect_robots=not args.ignore_robots,
+            respect_robots=args.respect_robots and not args.ignore_robots,
             workers=workers,
             max_pages=max_pages,
         )
