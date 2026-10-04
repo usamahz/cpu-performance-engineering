@@ -91,7 +91,8 @@ def test_instructions(server):
             return c.instructions
 
     text = run(go)
-    assert "call `ask` first" in text and len(text) < 2000
+    assert "call `ask` first" in text.lower() and len(text) < 2000
+    assert "load testing" in text and "compilers" in text  # the scope the list covers, beyond the core itself
 
 
 def test_ask(server):

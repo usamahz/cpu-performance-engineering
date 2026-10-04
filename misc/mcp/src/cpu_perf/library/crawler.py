@@ -240,11 +240,19 @@ class Crawler:
         p = self.progress
         p.running, p.total, p.done, p.counts = True, len(todo), 0, {}
         p.started_at, p.finished_at, p.current = time.time(), None, []
+        halt = stop if stop is not None else threading.Event()
         try:
-            with ThreadPoolExecutor(max_workers=max(1, self.workers), thread_name_prefix="crawl") as pool:
-                futures = [pool.submit(self._one, t, refresh or bool(only), stop) for t in todo]
+            pool = ThreadPoolExecutor(max_workers=max(1, self.workers), thread_name_prefix="crawl")
+            try:
+                futures = [pool.submit(self._one, t, refresh or bool(only), halt) for t in todo]
                 for f in futures:
                     f.result()
+            except BaseException:
+                # Ctrl-C in `cpu-perf index`: drop the queue instead of crawling it all
+                halt.set()
+                pool.shutdown(wait=False, cancel_futures=True)
+                raise
+            pool.shutdown(wait=True)
             self.embed_missing()
             self.store.set_meta("last_crawl", str(time.time()))
         finally:

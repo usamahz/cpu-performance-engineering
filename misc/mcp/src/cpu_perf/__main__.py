@@ -6,6 +6,7 @@ import argparse
 import json
 import logging
 import os
+import signal
 import statistics
 import sys
 import threading
@@ -162,6 +163,34 @@ def start_daily_update(holder, args, updater=None):
     return updater
 
 
+TERMINAL_HINT = """cpu-perf is an MCP server: your AI client starts it and talks to it over stdin.
+Add it to a client instead of running it here:
+
+    claude mcp add --scope user cpu-perf -- uvx cpu-perf
+    codex mcp add cpu-perf -- uvx cpu-perf
+
+From a terminal: `cpu-perf status` shows the source library, `cpu-perf index`
+builds it now, `cpu-perf --help` lists the rest. Waiting for a client on
+stdin; Ctrl-C quits."""
+
+
+def _leave(holder, code: int) -> None:
+    """Exit now. Downloads still in flight would otherwise hold the process
+    open for minutes after its client has gone; every library write is
+    already committed, the operating system releases the crawl lock, and the
+    crawl resumes where it stopped on the next start."""
+    lib = holder.current.lib
+    if lib is not None:
+        lib.stop()
+    logging.shutdown()
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.flush()
+        except (OSError, ValueError):
+            pass
+    os._exit(code)
+
+
 def cmd_serve(args) -> int:
     from .brain import BrainHolder
     from .server import create_server
@@ -173,8 +202,12 @@ def cmd_serve(args) -> int:
     if brain.lib is not None:
         brain.lib.start()
     if args.transport == "stdio":
+        if sys.stdin.isatty():
+            print(TERMINAL_HINT, file=sys.stderr)
+        # Ctrl-C: the stdio transport waits on a stdin read that a terminal never ends
+        signal.signal(signal.SIGINT, lambda *_: _leave(holder, 130))
         srv.run("stdio")
-        return 0
+        _leave(holder, 0)  # the client closed stdin
     from mcp.server.transport_security import TransportSecuritySettings
 
     security = None
@@ -188,6 +221,7 @@ def cmd_serve(args) -> int:
     elif args.host not in ("127.0.0.1", "localhost", "::1"):
         logging.getLogger("cpu_perf").warning("serving on %s without --allowed-host: DNS-rebinding protection is off", args.host)
         security = TransportSecuritySettings(enable_dns_rebinding_protection=False)
+    signal.signal(signal.SIGINT, lambda *_: _leave(holder, 130))  # the web server would re-raise it, then wait on downloads
     srv.run(
         "streamable-http",
         host=args.host,
@@ -197,7 +231,7 @@ def cmd_serve(args) -> int:
         stateless_http=True,
         transport_security=security,
     )
-    return 0
+    _leave(holder, 0)
 
 
 def cmd_index(args) -> int:
@@ -229,6 +263,11 @@ def cmd_index(args) -> int:
         if lib.store.stale_normalisation():
             print(f"re-normalised {lib.renormalise()} passages for the current tokenizer", file=sys.stderr)
         summary = lib.crawler.run(only=args.only or None, refresh=args.refresh)
+    except KeyboardInterrupt:
+        stop.set()
+        p = lib.crawler.progress
+        print(f"\nstopped at {p.done}/{p.total} sources; run `cpu-perf index` again to continue", file=sys.stderr)
+        os._exit(130)  # downloads in flight would hold the process open; what is done is committed
     finally:
         stop.set()
         lib.lock.release()
@@ -245,7 +284,7 @@ def cmd_status(args) -> int:
     if args.json:
         print(json.dumps(out.model_dump(mode="json"), indent=1))
     else:
-        print(render.status(out))
+        print(render.status(out, cli=True))
     return 0
 
 

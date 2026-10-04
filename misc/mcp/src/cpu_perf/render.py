@@ -306,23 +306,32 @@ def file(o: FileOut) -> str:
     return f"# {o.path}\n<{o.url}> characters {o.offset}-{o.offset + len(o.text)} of {o.total_chars}\n\n```\n{o.text}\n```{more}"
 
 
-def status(o: LibraryStatusOut) -> str:
-    head = [f"List: {o.corpus}" if o.corpus else "", f"Daily list update: {o.list_update}" if o.list_update else ""]
+def status(o: LibraryStatusOut, cli: bool = False) -> str:
+    """cli: for `cpu-perf status`, which reads the library but runs none of the
+    server's background work, so its own switches are not the library's state."""
+    head = [f"List: {o.corpus}" if o.corpus else "", f"Daily list update: {o.list_update}" if o.list_update and not cli else ""]
     head = [h for h in head if h]
     if not o.enabled:
         return "\n\n".join(["# Source library", "Disabled on this server: answers come from the repository alone.", *head])
     c = o.crawl or {}
+    embedder = "" if cli else f"; embedder {o.embedder}"
+    switches = "" if cli else f"; auto-index {'on' if o.auto_index else 'off'}; live reads {'on' if o.live_fetch else 'off'}"
     out = [
         "# Source library",
         *head,
-        f"{o.indexed}/{o.targets} linked sources indexed; {o.passages} passages; {o.vectors} vectors; embedder {o.embedder}.",
+        f"{o.indexed}/{o.targets} linked sources indexed; {o.passages} passages; {o.vectors} vectors{embedder}.",
         "By status: " + ", ".join(f"{k} {v}" for k, v in sorted(o.by_status.items())),
-        f"Data: {o.data_dir} ({o.bytes / 1e6:.1f} MB); auto-index {'on' if o.auto_index else 'off'}; live reads {'on' if o.live_fetch else 'off'}.",
+        f"Data: {o.data_dir} ({o.bytes / 1e6:.1f} MB){switches}.",
     ]
     if c.get("running"):
         out.append(f"Crawl running: {c.get('done')}/{c.get('total')} done.")
     elif o.lock_held_elsewhere:
         out.append("Another process is building the library.")
+    if cli and o.indexed < o.targets and not o.lock_held_elsewhere:
+        out.append(
+            "The server fills the library in the background while a client runs it; `cpu-perf index` does it now, "
+            "with progress. `cpu-perf status --detail` lists every source with its state."
+        )
     for s in o.sources:
         if s.get("status") not in ("indexed",):
             out.append(f"- {s['status']}: {s.get('title') or s['url']} <{s['url']}> {s.get('detail') or ''}")
