@@ -179,9 +179,10 @@ class Smoke(unittest.TestCase):
         page = self.page(permissions=["clipboard-read", "clipboard-write"])
         page.goto(self.base + "/mcp/", wait_until="networkidle")
         with self.shot(page, "copy"):
-            button = page.locator('[data-copy="uvx cpu-perf"]').first
+            command = "claude mcp add --scope user cpu-perf -- uvx cpu-perf"  # what a visitor pastes into a terminal
+            button = page.locator(f'[data-copy="{command}"]').first
             button.click()
-            self.assertEqual(page.evaluate("navigator.clipboard.readText()"), "uvx cpu-perf")
+            self.assertEqual(page.evaluate("navigator.clipboard.readText()"), command)
 
     def test_search(self):
         page = self.page()

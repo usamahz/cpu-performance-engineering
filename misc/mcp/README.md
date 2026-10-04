@@ -3,8 +3,8 @@
 An [MCP](https://modelcontextprotocol.io) server that gives any AI client the
 whole [CPU Performance Engineering](https://github.com/usamahz/cpu-performance-engineering)
 list as something it can search and reason over, instead of a page it has to
-be pasted. Connect it to Claude, ChatGPT, Cursor or VS Code and use it for
-your own performance work: ask questions, paste `perf stat` or compiler
+be pasted. Connect it to Claude Code, Codex, Claude Desktop, Cursor or VS
+Code and use it for your own performance work: ask questions, paste `perf stat` or compiler
 output, and the client's own model writes the answer from what the server
 returns, with citations back to the sources.
 
@@ -31,11 +31,11 @@ index is committed anywhere.
 
 ## Connect it
 
-One command installs and runs it, with [uv](https://docs.astral.sh/uv/):
-
-    uvx cpu-perf
-
-(`pip install cpu-perf` works too and gives the same `cpu-perf` command.
+Your AI client starts the server itself, with [uv](https://docs.astral.sh/uv/):
+it runs `uvx cpu-perf`, which fetches the release and starts it. Add that
+command to your client once, as below; run in a terminal, it only waits for
+a client. (`pip install cpu-perf` works too and gives the same `cpu-perf`
+command.
 Until the first release is on PyPI, use
 `uvx --from "git+https://github.com/usamahz/cpu-performance-engineering#subdirectory=misc/mcp" cpu-perf`
 wherever `uvx cpu-perf` appears below.)

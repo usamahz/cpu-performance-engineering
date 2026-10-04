@@ -24,10 +24,12 @@
         <div><dt>{{ copy.mcp.templates }}</dt><dd>{{ mv.templates | length }}</dd></div>
       </dl>
       {% endif %}
+      {% for label, cmd in ((copy.mcp.install_claude, "claude mcp add --scope user cpu-perf -- uvx cpu-perf"), (copy.mcp.install_codex, "codex mcp add cpu-perf -- uvx cpu-perf")) %}
       <div class="terminal">
-        <div class="terminal-bar"><span>{{ copy.mcp.install }}</span>{{ m.copy_button("uvx cpu-perf") }}</div>
-        <pre tabindex="0"><code>uvx cpu-perf</code></pre>
+        <div class="terminal-bar"><span>{{ label }}</span>{{ m.copy_button(cmd) }}</div>
+        <pre tabindex="0"><code>{{ cmd }}</code></pre>
       </div>
+      {% endfor %}
     </div>
   </div>
 </header>
