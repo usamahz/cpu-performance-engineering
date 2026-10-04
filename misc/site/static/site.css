@@ -130,25 +130,36 @@ table { border-collapse: collapse; }
 .nav a { border-radius: var(--r-sm); padding: 0.375rem 0.625rem; font-size: 0.875rem; line-height: 1.25rem; color: var(--muted-foreground); }
 .nav a:hover { color: var(--foreground); }
 .nav a[aria-current] { color: var(--foreground); text-decoration: underline; text-decoration-color: var(--primary); text-decoration-thickness: 2px; text-underline-offset: 6px; }
-.header-search { display: none; margin-left: auto; }
+.header-actions { margin-left: auto; display: flex; align-items: center; gap: 0.75rem; }
+.header-search { display: none; }
 .header-search input { height: 2rem; width: 14rem; border-width: 1px; border-radius: var(--r-sm); background: var(--card); padding: 0 0.625rem; font-family: var(--font-mono); font-size: 0.75rem; }
 .header-search input::placeholder, .field::placeholder { color: var(--muted-foreground); }
-.mobile-nav { margin-left: auto; position: relative; }
-.mobile-nav summary { list-style: none; cursor: pointer; border-width: 1px; border-radius: var(--r-sm); padding: 0.25rem 0.625rem; font-family: var(--font-mono); font-size: 0.75rem; }
+.mobile-nav { position: relative; }
+.mobile-nav summary { list-style: none; cursor: pointer; display: flex; align-items: center; height: 2rem; border-width: 1px; border-radius: var(--r-sm); padding: 0 0.625rem; font-family: var(--font-mono); font-size: 0.75rem; }
 .mobile-nav summary::-webkit-details-marker { display: none; }
 .mobile-nav[open] summary { background: var(--copper-soft); }
 .mobile-nav nav { position: absolute; right: 0; top: calc(100% + 0.6rem); min-width: 13rem; display: grid; border-width: 1px; border-radius: var(--radius); background: var(--card); padding: 0.5rem 1rem; }
 .mobile-nav nav a { padding-block: 0.5rem; font-size: 0.875rem; }
+/* GitHub's mark: an icon button on a phone, the mark and its name from 768px */
+.gh-mark { width: 1rem; height: 1rem; flex: none; }
+.gh-button { position: relative; display: inline-flex; align-items: center; gap: 0.4rem; height: 2rem; border-width: 1px; border-radius: var(--r-sm); background: var(--card); padding: 0 0.5rem; font-size: 0.8125rem; font-weight: 500; }
+.gh-button:hover { background: var(--accent); }
+.gh-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @media (min-width: 768px) {
   .nav { display: flex; }
   .header-search { display: block; }
   .mobile-nav { display: none; }
+  .gh-button { padding: 0 0.625rem; }
+  .gh-label { position: static; width: auto; height: auto; overflow: visible; clip-path: none; }
 }
 .site-footer { margin-top: 6rem; border-top-width: 1px; }
 .footer-grid { display: grid; gap: 2rem; padding-block: 2.5rem; font-size: 0.875rem; line-height: 1.25rem; }
 .footer-grid .links { display: grid; gap: 0.375rem; align-content: start; }
 .footer-grid .links a:hover { color: var(--primary); }
 .footer-brand { font-weight: 500; }
+.footer-gh { margin-top: 1rem; }
+.footer-gh a { display: inline-flex; align-items: center; gap: 0.5rem; max-width: 100%; border-width: 1px; border-radius: var(--r-sm); background: var(--card); padding: 0.375rem 0.625rem; font-family: var(--font-mono); font-size: 0.75rem; overflow-wrap: anywhere; }
+.footer-gh a:hover { color: var(--primary); }
 .footer-meta { margin-top: 1rem; font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted-foreground); }
 .footer-meta a { text-decoration: underline; }
 @media (min-width: 768px) { .footer-grid { grid-template-columns: 2fr 1fr 1fr; } }
@@ -622,6 +633,10 @@ a.record-title:hover { color: var(--primary); }
 .client-tabs { margin-top: 1.5rem; }
 .tab-panel { scroll-margin-top: 5rem; }
 .tab-panel > .tab-heading { margin-top: 1.5rem; font-size: 1.05rem; font-weight: 600; }
+/* the setup a client borrows shows only in tabs; without them it is the next panel down */
+.setup-via { display: none; margin-top: 1.25rem; }
+[data-tabbed] .setup-via { display: block; }
+.setup-via > .label-mono { margin-bottom: 0.5rem; }
 .tool-title { font-size: 0.875rem; color: var(--muted-foreground); }
 .tools-note { margin: 0.5rem 0 1.25rem; }
 .flow-more { margin-top: 1rem; }

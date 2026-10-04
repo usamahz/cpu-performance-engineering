@@ -1,3 +1,4 @@
+{% from "_icons.html" import github_mark -%}
 <!doctype html>
 <html lang="{{ config.site.lang }}">
 <head>
@@ -36,20 +37,22 @@
     <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">{{ config.site.mark }}</span><span>{{ config.site.short }}</span></a>
     <nav class="nav" aria-label="Primary">
       {% for n in config.nav %}<a href="{{ n.href }}"{% if page.nav == n.href %} aria-current="page"{% endif %}>{{ n.label }}</a>
-      {% endfor %}<a href="{{ site.repo_url }}" rel="noopener">{{ copy.global.github }}</a>
+      {% endfor %}
     </nav>
-    <form class="header-search" role="search" action="/search/" method="get">
-      <label class="sr-only" for="site-q">{{ copy.global.search_label }}</label>
-      <input id="site-q" name="q" type="search" placeholder="{{ copy.global.search_placeholder }}" autocomplete="off">
-    </form>
-    <details class="mobile-nav">
-      <summary>{{ copy.global.menu }}</summary>
-      <nav aria-label="Mobile">
-        {% for n in config.nav %}<a href="{{ n.href }}">{{ n.label }}</a>
-        {% endfor %}<a href="/search/">{{ copy.global.search_label }}</a>
-        <a href="{{ site.repo_url }}" rel="noopener">{{ copy.global.github }}</a>
-      </nav>
-    </details>
+    <div class="header-actions">
+      <form class="header-search" role="search" action="/search/" method="get">
+        <label class="sr-only" for="site-q">{{ copy.global.search_label }}</label>
+        <input id="site-q" name="q" type="search" placeholder="{{ copy.global.search_placeholder }}" autocomplete="off">
+      </form>
+      <a class="gh-button" href="{{ site.repo_url }}" rel="noopener">{{ github_mark() }}<span class="gh-label">{{ copy.global.github_name }}</span></a>
+      <details class="mobile-nav">
+        <summary>{{ copy.global.menu }}</summary>
+        <nav aria-label="Mobile">
+          {% for n in config.nav %}<a href="{{ n.href }}">{{ n.label }}</a>
+          {% endfor %}<a href="/search/">{{ copy.global.search_label }}</a>
+        </nav>
+      </details>
+    </div>
   </div>
 </header>
 <main id="main">
@@ -60,6 +63,7 @@
     <div>
       <p class="footer-brand">{{ config.site.name }}</p>
       <p class="muted">{{ copy.global.tagline }}</p>
+      <p class="footer-gh"><a href="{{ site.repo_url }}" rel="noopener">{{ github_mark() }}<span>{{ site.repo_url | replace("https://github.com/", "") }}</span></a></p>
       <p class="footer-meta">{{ copy.global.generated_from }} <a href="{{ site.links.tree() }}" rel="noopener">{{ site.commit_short }}</a> · {{ site.committed_date }} · {{ copy.global.licence }}</p>
       <p class="footer-meta">{{ copy.global.credit_banner }}</p>
     </div>

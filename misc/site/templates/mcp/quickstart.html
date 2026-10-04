@@ -21,6 +21,11 @@
         <section class="tab-panel" id="{{ c.anchor }}" role="tabpanel" aria-labelledby="tab-{{ c.anchor }}">
           <h3 class="tab-heading">{{ c.title }}</h3>
           <div class="prose-lab">{{ mv.render(c.body, 2) | safe }}</div>
+          {% set via = mv.setup_via(c.anchor) %}
+          {% if via %}<div class="setup-via">
+            <p class="label-mono">{{ via.title }}</p>
+            <div class="prose-lab">{{ mv.render(via.body, 2) | safe }}</div>
+          </div>{% endif %}
         </section>
         {% endfor %}
       </div>

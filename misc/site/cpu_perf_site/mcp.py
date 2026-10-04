@@ -39,6 +39,10 @@ ANCHOR_PAGES = {
 }
 GITHUB_ONLY = {"development", "releasing", "licence"}
 CLIENT_TABS = ("claude", "chatgpt", "codex", "cursor-and-vs-code")
+# A client the README sets up through another client's host: the ChatGPT
+# desktop app runs local servers through Codex.
+CLIENT_SETUP_VIA = {"chatgpt": "codex"}
+CODE = re.compile(r"^(?:```|~~~| {4}\S)", re.M)
 
 
 @dataclass
@@ -221,6 +225,16 @@ class McpView:
     @property
     def client_tabs(self) -> tuple:
         return CLIENT_TABS
+
+    def setup_via(self, anchor: str) -> DocSection | None:
+        """The section of the client another client is set up through, when
+        the README sends it there ("configured as below") and its own section
+        has no command or config. Once each client is a tab, "below" is a
+        tab the reader is not looking at, so the panel shows that setup too."""
+        own, via = self.find(anchor), CLIENT_SETUP_VIA.get(anchor)
+        if own is None or via is None or CODE.search(own.body):
+            return None
+        return self.find(via)
 
     @property
     def instructions(self) -> str:

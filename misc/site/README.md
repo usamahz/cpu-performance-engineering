@@ -92,3 +92,5 @@ matches nothing, a unit that disagrees with its axis, a key repeated across
 - `templates/`, `static/`: Jinja templates, one stylesheet, seven small
   scripts and self-hosted fonts (Instrument Sans and JetBrains Mono, both
   under the SIL Open Font License, with their licence texts beside them).
+  GitHub's mark in the header, hero and footer is `mark-github-16` from
+  Primer Octicons (MIT), inline in `templates/_icons.html`.

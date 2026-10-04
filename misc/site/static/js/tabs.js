@@ -13,6 +13,7 @@ for (const wrap of document.querySelectorAll("[data-tabs]")) {
     if (focus) tabs[i].focus();
   };
   list.hidden = false;
+  wrap.dataset.tabbed = "";
   for (const h of wrap.querySelectorAll(".tab-heading")) h.classList.add("sr-only");
   tabs.forEach((t, i) => {
     t.addEventListener("click", () => { select(i); history.replaceState(null, "", `#${panels[i].id}`); });

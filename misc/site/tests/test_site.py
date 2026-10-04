@@ -178,6 +178,27 @@ class CopyLint(unittest.TestCase):
         self.assertEqual(lint.lint(), [])
 
 
+class ClientTabs(unittest.TestCase):
+    """A client the README sets up through another ("configured as below")
+    shows that setup in its own tab, until its section has a command."""
+
+    def view(self, chatgpt: str):
+        from cpu_perf_site.mcp import McpView
+        readme = ("# cpu-perf\n\n## Connect it\n\n### ChatGPT\n\n" + chatgpt
+                  + "\n\n### Codex\n\n    codex mcp add cpu-perf -- uvx cpu-perf\n")
+        return McpView(readme, None, None)
+
+    def test_borrows_the_setup_it_points_to(self):
+        self.assertEqual(self.view("Runs local servers through its Codex host, configured as below.").setup_via("chatgpt").anchor, "codex")
+
+    def test_its_own_command_wins(self):
+        self.assertIsNone(self.view("Through Codex:\n\n    chatgpt mcp add cpu-perf").setup_via("chatgpt"))
+        self.assertIsNone(self.view("Through Codex:\n\n```toml\n[x]\n```").setup_via("chatgpt"))
+
+    def test_only_mapped_clients_borrow(self):
+        self.assertIsNone(self.view("Configured as below.").setup_via("codex"))
+
+
 # --------------------------------------------------------------------------
 # Against a real build of this checkout.
 
