@@ -239,10 +239,12 @@ falls back to keyword search alone.
 
 The library is built on the user's own machine, or the operator's own server,
 from the public URLs the list links; nothing crawled is committed, published
-or shipped in the package or the container image. The crawler identifies
-itself, respects `robots.txt`, waits between requests to one host and backs
-off on rate limits. Reading one source on request through `read_source` is a
-user action, like opening the link, and does not consult `robots.txt`.
+or shipped in the package or the container image. The crawler fetches only
+those documents, identifies itself, waits between requests to one host and
+backs off on rate limits. It reads each listed link the way a reader opening
+it would, so it does not consult `robots.txt` unless asked to with
+`--respect-robots` (`CPU_PERF_RESPECT_ROBOTS=1`); sources a site then
+disallows are reported as blocked.
 
 ## Tools
 
@@ -335,7 +337,7 @@ query times on your own machine.
 | `CPU_PERF_AUTO_INDEX=0` (`--no-auto-index`) | Do not build the library in the background. |
 | `CPU_PERF_LIVE_FETCH=0` (`--no-live-fetch`) | `read_source` serves only what is indexed. |
 | `CPU_PERF_LIBRARY=0` (`--no-library`) | Repository knowledge only. |
-| `CPU_PERF_IGNORE_ROBOTS=1` (`--ignore-robots`) | Crawl where `robots.txt` disallows. |
+| `CPU_PERF_RESPECT_ROBOTS=1` (`--respect-robots`) | Skip what `robots.txt` disallows. By default every listed link is read. |
 | `CPU_PERF_REPO` (`--repo`) | Serve a checkout instead of the bundled copy. |
 | `CPU_PERF_AUTO_UPDATE=0` (`--no-auto-update`) | Serve the installed copy of the list; no daily check. |
 | `CPU_PERF_UPSTREAM` | The `owner/repo` the daily check follows (a fork, say). |

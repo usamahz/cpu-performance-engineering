@@ -1,7 +1,8 @@
 """Fetch, extract, chunk, embed and store every linked source.
 
-Resumable (each source commits on its own), polite (robots.txt, one request
-per host at a time with a gap), and single-writer (an OS file lock, so
+Resumable (each source commits on its own), polite (one request per host
+at a time with a gap, backing off on rate limits; robots.txt only when asked,
+since it fetches just the documents the list links), and single-writer (an OS file lock, so
 several MCP clients can share one library)."""
 
 from __future__ import annotations
@@ -191,7 +192,7 @@ class Crawler:
         pdf_max_bytes: int = 80 * 1024 * 1024,
         workers: int = 6,
         refresh_days: float = 30.0,
-        respect_robots: bool = True,
+        respect_robots: bool = False,
     ):
         self.corpus = corpus
         self.store = store
