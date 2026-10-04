@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import random
 import sqlite3
 import sys
 import threading
@@ -114,6 +115,23 @@ class SourceRow:
     extract_version: int | None = None
 
 
+def _retry_locked(step, seconds: float = 30.0):
+    """Run an idempotent setup step, again if SQLite reports a lock.
+
+    Opening a new library from several processes at once (two MCP clients
+    starting together) races on creating the file and switching it to WAL;
+    there SQLite answers "database is locked" at once instead of waiting out
+    the busy timeout, so the step is retried with a short random backoff."""
+    deadline = time.monotonic() + seconds
+    while True:
+        try:
+            return step()
+        except sqlite3.OperationalError as exc:
+            if not any(w in str(exc) for w in ("locked", "busy")) or time.monotonic() > deadline:
+                raise
+            time.sleep(0.02 + random.random() * 0.08)
+
+
 class Store:
     def __init__(self, path: Path | str, *, readonly: bool = False):
         """readonly opens an existing file as immutable (for evaluation and
@@ -124,19 +142,24 @@ class Store:
         self._local = threading.local()
         if not readonly:
             self.path.parent.mkdir(parents=True, exist_ok=True)
-            with self._conn() as con:
-                con.executescript(SCHEMA)
-                con.execute("INSERT OR IGNORE INTO meta(key, value) VALUES('schema', ?)", (SCHEMA_VERSION,))
-                for table, col, typ in MIGRATIONS:
-                    have = {r["name"] for r in con.execute(f"PRAGMA table_info({table})")}
-                    if col not in have:
-                        try:
-                            con.execute(f"ALTER TABLE {table} ADD COLUMN {col} {typ}")
-                        except sqlite3.OperationalError:
-                            pass  # another process added it first
+            _retry_locked(self._create)
         self._vectors = None  # {"ids", "mat", "epoch", "loaded_at", "checked"}
         self.vector_loads = 0  # full reloads of the matrix (a counter, not a clock: Windows ticks coarsely)
         self._vec_lock = threading.Lock()
+
+    def _create(self) -> None:
+        """The schema and its migrations; every statement is safe to run twice."""
+        con = self._conn()
+        con.executescript(SCHEMA)
+        con.execute("INSERT OR IGNORE INTO meta(key, value) VALUES('schema', ?)", (SCHEMA_VERSION,))
+        for table, col, typ in MIGRATIONS:
+            have = {r["name"] for r in con.execute(f"PRAGMA table_info({table})")}
+            if col not in have:
+                try:
+                    con.execute(f"ALTER TABLE {table} ADD COLUMN {col} {typ}")
+                except sqlite3.OperationalError as exc:
+                    if "duplicate column" not in str(exc):
+                        raise  # a lock is retried by _retry_locked; another process adding it first is fine
 
     # ----- connections --------------------------------------------------------
 
@@ -148,7 +171,7 @@ class Store:
                 con = sqlite3.connect(uri, uri=True, check_same_thread=False)
             else:
                 con = sqlite3.connect(self.path, timeout=30, isolation_level=None, check_same_thread=False)
-                con.execute("PRAGMA journal_mode=WAL")
+                _retry_locked(lambda: con.execute("PRAGMA journal_mode=WAL"))
                 con.execute("PRAGMA synchronous=NORMAL")
                 con.execute("PRAGMA foreign_keys=ON")
             con.row_factory = sqlite3.Row
