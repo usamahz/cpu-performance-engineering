@@ -1,0 +1,35 @@
+{% extends "_base.html" %}
+{% import "_macros.html" as m with context %}
+{% block main %}
+{% call m.page_header(copy.learn.eyebrow, copy.learn.heading, site.intro.closing_html) %}{% endcall %}
+<div class="container-lab" id="contents">
+  {% for g in site.groups %}
+  <section class="group" aria-labelledby="group-{{ g.id }}">
+    <div class="group-head">
+      <h2 id="group-{{ g.id }}" class="h3">{{ g.name }}</h2>
+      <span class="num">{{ g.range_label }}</span>
+      <p>{{ g.blurb }}</p>
+    </div>
+    <ol class="chapter-rows">
+      {% for s in g.sections %}
+      <li>
+        <a class="chapter-row" href="{{ s.url }}" data-section="{{ s.slug }}">
+          <span class="big">{{ s.number_label }}</span>
+          <div>
+            <h3>{{ s.title }}</h3>
+            {% if s.preamble %}<p class="pre">{{ s.preamble_html | striptags }}</p>{% endif %}
+          </div>
+          <div class="meta">
+            <div>{{ s.entry_count }} {{ copy.learn.sources }}{% if s.subsections %} · {{ s.subsections | length }} {{ copy.learn.parts }}{% endif %}</div>
+            {% if s.benchmarks %}<div class="text-measure">{{ s.benchmarks | length }} {{ copy.learn.benchmark }}</div>{% endif %}
+            <div class="meter" data-meter="{{ s.slug }}" data-total="{{ s.entry_count }}" hidden><i></i></div>
+          </div>
+        </a>
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+  {% endfor %}
+  <p class="mt-section"><a class="link-primary small" href="/learn/all/">{{ copy.learn.all_link }}</a></p>
+</div>
+{% endblock %}

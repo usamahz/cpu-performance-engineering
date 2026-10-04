@@ -1,0 +1,115 @@
+{# Components from the prototype's components/lab.tsx and mcp.tsx, as macros. #}
+
+{% macro eyebrow(text, cls="") %}<p class="label-mono {{ cls }}">{{ text }}</p>{% endmacro %}
+
+{% macro page_header(eyebrow_html, title, lede_html="", title_id="") %}
+<header class="page-header bg-graph">
+  <div class="container-lab">
+    <p class="label-mono crumbs">{{ eyebrow_html | safe }}</p>
+    <h1 class="page-title"{% if title_id %} id="{{ title_id }}"{% endif %}>{{ title }}</h1>
+    {% if lede_html %}<div class="page-lede">{{ lede_html | safe }}</div>{% endif %}
+    {{ caller() if caller is defined else "" }}
+  </div>
+</header>
+{% endmacro %}
+
+{% macro badge(kind) %}<span class="badge badge-{{ kind }}">{{ copy.chapter.no_link if kind == "unlinked" else kind }}</span>{% endmacro %}
+
+{% macro entry(e, number=True) %}
+<li id="{{ e.anchor }}" data-entry="{{ e.id }}" data-key="{{ e.progress_key }}" data-kind="{{ e.badge }}">
+  {% if number %}<span class="entry-num">{{ e.number }}</span>{% endif %}
+  <div class="entry-body">
+    <div class="entry-head">
+      {% if e.url %}<a class="entry-title" href="{{ e.url }}" rel="noopener" target="_blank">{{ e.title }}</a>{% else %}<span class="entry-title">{{ e.title }}</span>{% endif %}
+      {{ badge(e.badge) }}
+    </div>
+    <p class="entry-reason">{{ e.reason_html | safe }}</p>
+    {% if e.condition %}<p class="promotes">{{ copy.chapter.promotes }} → {{ e.condition }}</p>{% endif %}
+    {% if e.also_in %}<p class="entry-meta">{{ copy.chapter.also_in }} {% for o in e.also_in %}<a href="{{ o.page }}">§{{ o.section }}</a>{% endfor %}</p>{% endif %}
+  </div>
+</li>
+{% endmacro %}
+
+{% macro passport(b, compact=False) %}
+<section class="passport{{ ' compact' if compact }}" aria-label="{{ copy.benchmarks.passport }}">
+  <div class="passport-head">
+    <span class="label-mono">{{ copy.benchmarks.passport }}</span>
+    <span class="n">{{ b.passport_filled }}/7 {{ copy.benchmarks.fields }}</span>
+  </div>
+  <dl>
+    {% for label, value in b.passport %}
+    <div><dt><span>{{ loop.index }}</span> {{ label }}</dt><dd>{% if value %}{{ value | safe }}{% else %}<em>{{ copy.benchmarks.not_stated }}</em>{% endif %}</dd></div>
+    {% endfor %}
+  </dl>
+</section>
+{% endmacro %}
+
+{% macro terminal(title, code, copy_text=None) %}
+<div class="terminal">
+  <div class="terminal-bar"><span>{{ title }}</span><button type="button" class="copy-btn" data-copy="{{ copy_text if copy_text is not none else code }}" hidden>{{ copy.global.copy_label }}</button></div>
+  <pre tabindex="0"><code>{{ code }}</code></pre>
+</div>
+{% endmacro %}
+
+{% macro callout(b) %}
+<a class="callout" href="{{ b.url }}">
+  <span class="row"><span class="label-mono">{{ copy.chapter.reproduce }} · {{ b.slug }}</span><span class="arrow" aria-hidden="true">→</span></span>
+  <span class="t">{{ b.title }}</span>
+  <span class="d">{{ b.index_claim }}</span>
+</a>
+{% endmacro %}
+
+{% macro notice(title, tone="copper") %}
+<aside class="notice{{ ' measure' if tone == 'measure' }}">
+  <p class="t">{{ title }}</p>
+  <div class="d">{{ caller() }}</div>
+</aside>
+{% endmacro %}
+
+{% macro copy_button(text, label=None) %}<button type="button" class="copy-btn" data-copy="{{ text }}" hidden>{{ label or copy.global.copy_label }}</button>{% endmacro %}
+
+{# A prompt of the MCP server as Claude Code invokes it, with what the
+   server's own prompts/list says about it when the surface dump is present. #}
+{% macro prompt_cmd(name, args="", describe=True) %}
+{% set p = site.mcp.prompt(name) %}
+<div class="prompt-cmd">
+  <div class="prompt-copy"><code>/mcp__cpu-perf__{{ name }}{% if args %} {{ args }}{% endif %}</code>{{ copy_button("/mcp__cpu-perf__" ~ name ~ " " ~ args, copy.global.copy_prompt) }}</div>
+  {% if p and describe %}<p class="prompt-desc">{{ p.get("description") | squash }}{% if p.get("arguments") %} <span class="args">{% for a in p.arguments %}<code>{{ a.name }}</code>{% if not loop.last %} {% endif %}{% endfor %}</span>{% endif %}</p>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro mcp_header(active_label, title, lede) %}
+{% call page_header('<a href="/mcp/">' ~ copy.mcp.title ~ '</a> / ' ~ active_label, title, lede) %}{% endcall %}
+{% endmacro %}
+
+{% macro surface_missing() %}
+{% if not site.mcp.surface %}<aside class="notice"><p class="t">{{ copy.mcp.surface_missing }}</p></aside>{% endif %}
+{% endmacro %}
+
+{% macro resource(uri) %}<div class="resource"><code>{{ uri }}</code>{{ copy_button(uri) }}</div>{% endmacro %}
+
+{% macro chart_figure(chart) %}
+<figure class="figure" id="chart-{{ chart.id }}">
+  <figcaption><span class="t">{{ chart.title }}</span><span class="m">{{ chart.metric }}{% if chart.log %} · {{ copy.benchmarks.log_scale }}{% endif %}</span></figcaption>
+  {{ chart.svg | safe }}
+  {% if chart.legend %}<p class="legend">{% for item in chart.legend %}<span><i class="{{ item.cls }}" aria-hidden="true"></i>{{ item.label }}</span>{% endfor %}</p>{% endif %}
+  <details class="data-table"><summary>{{ copy.benchmarks.data_table }}</summary>{{ chart.table | safe }}{{ chart.ref_table | safe }}</details>
+</figure>
+{% endmacro %}
+
+{% macro mcp_nav(active) %}
+<nav class="mcp-nav" aria-label="MCP">
+  <div class="container-lab">
+    {% for href, label in [("/mcp/", copy.mcp.nav_overview), ("/mcp/quickstart/", copy.mcp.nav_quickstart), ("/mcp/tools/", copy.mcp.nav_tools), ("/mcp/resources/", copy.mcp.nav_resources), ("/mcp/workflows/", copy.mcp.nav_workflows), ("/mcp/security/", copy.mcp.nav_security)] %}
+    <a href="{{ href }}"{% if active == href %} aria-current="page"{% endif %}>{{ label }}</a>
+    {% endfor %}
+  </div>
+</nav>
+{% endmacro %}
+
+{% macro prevnext(prev, next, label_prev, label_next, cls="") %}
+<nav class="prevnext {{ cls }}" aria-label="Previous and next">
+  {% if prev %}<a href="{{ prev.url }}"><span class="label-mono">{{ label_prev }}</span><span class="t">{% if prev.number_label is defined and prev.subsections is defined %}{{ prev.number_label }} {% endif %}{{ prev.title }}</span></a>{% endif %}
+  {% if next %}<a class="next" href="{{ next.url }}"><span class="label-mono">{{ label_next }}</span><span class="t">{% if next.number_label is defined and next.subsections is defined %}{{ next.number_label }} {% endif %}{{ next.title }}</span></a>{% endif %}
+</nav>
+{% endmacro %}

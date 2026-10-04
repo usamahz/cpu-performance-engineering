@@ -1,0 +1,89 @@
+{% from "_icons.html" import github_mark -%}
+<!doctype html>
+<html lang="{{ config.site.lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'">
+<title>{{ page.title }}</title>
+<meta name="description" content="{{ page.description }}">
+<link rel="canonical" href="{{ site.absolute(page.path) }}">
+{% if page.noindex %}<meta name="robots" content="noindex">
+{% endif %}
+{% if page.twin %}<link rel="alternate" type="text/markdown" href="{{ page.twin }}" title="Markdown">
+{% endif %}
+<link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{{ config.site.name }}">
+<meta property="og:title" content="{{ page.og_title or page.title }}">
+<meta property="og:description" content="{{ page.description }}">
+<meta property="og:url" content="{{ site.absolute(page.path) }}">
+<meta property="og:image" content="{{ site.absolute('/og.jpg') }}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#f7f4ee" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1d1a17" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/fonts/instrument-sans-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/site.css?v={{ assets.css }}">
+{% for ld in page.json_ld %}<script type="application/ld+json">{{ ld | json_ld }}</script>
+{% endfor %}
+</head>
+<body>
+<header class="site-header">
+  <a class="skip" href="#main">{{ copy.global.skip }}</a>
+  <div class="container-lab header-row">
+    <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">{{ config.site.mark }}</span><span>{{ config.site.short }}</span></a>
+    <nav class="nav" aria-label="Primary">
+      {% for n in config.nav %}<a href="{{ n.href }}"{% if page.nav == n.href %} aria-current="page"{% endif %}>{{ n.label }}</a>
+      {% endfor %}
+    </nav>
+    <div class="header-actions">
+      <form class="header-search" role="search" action="/search/" method="get">
+        <label class="sr-only" for="site-q">{{ copy.global.search_label }}</label>
+        <input id="site-q" name="q" type="search" placeholder="{{ copy.global.search_placeholder }}" autocomplete="off">
+      </form>
+      <a class="gh-button" href="{{ site.repo_url }}" rel="noopener">{{ github_mark() }}<span class="gh-label">{{ copy.global.github_name }}</span></a>
+      <details class="mobile-nav">
+        <summary>{{ copy.global.menu }}</summary>
+        <nav aria-label="Mobile">
+          {% for n in config.nav %}<a href="{{ n.href }}">{{ n.label }}</a>
+          {% endfor %}<a href="/search/">{{ copy.global.search_label }}</a>
+        </nav>
+      </details>
+    </div>
+  </div>
+</header>
+<main id="main">
+{% block main %}{% endblock %}
+</main>
+<footer class="site-footer bg-graph">
+  <div class="container-lab footer-grid">
+    <div>
+      <p class="footer-brand">{{ config.site.name }}</p>
+      <p class="muted">{{ copy.global.tagline }}</p>
+      <p class="footer-gh"><a href="{{ site.repo_url }}" rel="noopener">{{ github_mark() }}<span>{{ site.repo_url | replace("https://github.com/", "") }}</span></a></p>
+      <p class="footer-meta">{{ copy.global.generated_from }} <a href="{{ site.links.tree() }}" rel="noopener">{{ site.commit_short }}</a> · {{ site.committed_date }} · {{ copy.global.licence }}</p>
+      <p class="footer-meta">{{ copy.global.credit_banner }}</p>
+    </div>
+    <div class="links">
+      <a href="/learn/">{{ copy.global.footer_reading }}</a>
+      <a href="/benchmarks/">{{ copy.global.footer_lab }}</a>
+      <a href="/watchlist/">{{ copy.global.footer_watch }}</a>
+      <a href="/evidence/">{{ copy.global.footer_evidence }}</a>
+      <a href="/evidence/record/">{{ copy.global.footer_record }}</a>
+    </div>
+    <div class="links">
+      <a href="/mcp/">{{ copy.global.footer_mcp }}</a>
+      <a href="/mcp/quickstart/">{{ copy.global.footer_mcp_quickstart }}</a>
+      <a href="/llms.txt">{{ copy.global.footer_data }}</a>
+      <a href="{{ site.repo_url }}/blob/main/CONTRIBUTING.md" rel="noopener">{{ copy.global.footer_contribute }}</a>
+      <a href="{{ site.repo_url }}/issues/new/choose" rel="noopener">{{ copy.global.footer_concern }}</a>
+    </div>
+  </div>
+</footer>
+<script type="application/json" id="ui-copy">{{ {"read": copy.chapter.read, "copied": copy.global.copied, "copy_failed": copy.global.copy_failed, "indexed": copy.search.indexed, "results": copy.search.results, "type_section": copy.search.type_section, "type_part": copy.search.type_part, "type_source": copy.search.type_source, "type_benchmark": copy.search.type_benchmark, "type_record": copy.search.type_record, "no_link": copy.chapter.no_link, "in": copy.search.in_label} | json_ld }}</script>
+<script src="/js/site.js?v={{ assets.js }}" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{% extends "_base.html" %}
+{% import "_macros.html" as m with context %}
+{% block main %}
+<article data-section="{{ s.slug }}">
+{% call m.page_header(copy.watchlist.eyebrow, s.title, s.preamble_html, title_id=s.anchor) %}{% endcall %}
+<div class="container-lab">
+  <div class="criteria">
+    {% for c in copy.watchlist.criteria %}<div><span class="k">{{ copy.watchlist.criterion }} {{ loop.index }}</span><p>{{ c }}</p></div>
+    {% endfor %}
+  </div>
+  {% if s.watch_checked %}<p class="label-mono">{{ copy.watchlist.checked }} <time datetime="{{ s.watch_checked }}">{{ s.watch_checked }}</time></p>{% endif %}
+  <div class="watch-grid mt-section">
+    {% for sub in s.subsections %}
+    <section class="watch-card" aria-labelledby="{{ sub.anchor }}">
+      <h2 id="{{ sub.anchor }}">{{ sub.title }} <span>{{ sub.entries | length }}</span></h2>
+      <ol class="entries">{% for e in sub.entries %}{{ m.entry(e) }}{% endfor %}</ol>
+    </section>
+    {% endfor %}
+  </div>
+  <p class="mt-section small"><a class="link-primary" href="{{ site.repo_url }}/blob/main/README.md#{{ s.anchor }}" rel="noopener">{{ copy.chapter.edit }}</a></p>
+  {{ m.prevnext(s.prev, None, copy.chapter.prev, copy.chapter.next) }}
+</div>
+</article>
+{% endblock %}

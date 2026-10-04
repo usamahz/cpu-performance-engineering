@@ -109,7 +109,10 @@ carrying the claim, the method, the seven fields, the results table and the
 analysis, with `results/raw.txt` and `results/summary.md` committed from
 the machine the README names. `QUICK=1 ./run.sh` has to finish inside ten
 seconds so CI can smoke-test it. `misc/benchmarks/README.md` has the
-details.
+details. The website charts every benchmark from its `results/raw.txt`
+through a short entry in `misc/site/charts.toml` that names the `RESULT`
+keys to plot, and its build stops until a new benchmark has one; a
+reviewer adds it if the pull request does not.
 
 ## How review goes
 
@@ -117,3 +120,6 @@ Arguments are about the source, never about whoever proposed it. Expect to
 be asked for the origin of a claim. Expect a good source to be turned down
 because a subsection is full, and say so plainly if you think the entry it
 would displace is weaker.
+
+The website is rebuilt from the repository on every merge to `main`, so a
+change to the list is a change to the README and never to the site.

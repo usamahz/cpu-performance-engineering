@@ -1,0 +1,85 @@
+{% extends "_base.html" %}
+{% import "_macros.html" as m with context %}
+{% block main %}
+<article data-section="{{ s.slug }}">
+  <header class="page-header bg-graph">
+    <div class="container-lab">
+      <p class="label-mono crumbs"><a href="/learn/">{{ copy.chapter.breadcrumb }}</a> / {{ s.group.name if s.group else "" }}</p>
+      <div class="chapter-title">
+        <span class="big" aria-hidden="true">{{ s.number_label }}</span>
+        <h1 id="{{ s.anchor }}">{{ s.title }}</h1>
+      </div>
+      {% if s.preamble %}
+      <div class="principle"><p class="label-mono">{{ copy.chapter.read_first }}</p><p class="prose-inline">{{ s.preamble_html | safe }}</p></div>
+      {% endif %}
+    </div>
+  </header>
+
+  <div class="container-lab with-aside">
+    <div class="main">
+      <dl class="facts">
+        <div><dt class="label-mono">{{ copy.chapter.facts_sources }}</dt><dd>{{ s.entry_count }}{% if s.subsections %} {{ copy.chapter.entries_in }} {{ s.subsections | length }} {{ copy.learn.parts }}{% endif %}</dd></div>
+        <div><dt class="label-mono">{{ copy.chapter.facts_reproduce }}</dt><dd>{% for b in s.benchmarks %}<a href="{{ b.url }}">{{ b.slug }}</a>{% if not loop.last %}, {% endif %}{% else %}{{ copy.chapter.facts_none }}{% endfor %}</dd></div>
+        <div><dt class="label-mono">{{ copy.chapter.facts_related }}</dt><dd>{% for r in s.related %}<a href="{{ r.url }}">§{{ r.number }} {{ r.title }}</a>{% if not loop.last %}, {% endif %}{% else %}{{ copy.chapter.facts_none }}{% endfor %}</dd></div>
+        <div><dt class="label-mono">{{ copy.chapter.facts_mcp }}</dt><dd>{{ m.resource(s.mcp_resource) }}</dd></div>
+      </dl>
+
+      <div class="filters" data-filter-for="chapter" hidden>
+        <label><span class="label-mono">{{ copy.chapter.filter_label }}</span><input class="field wide" type="search" data-filter-text placeholder="{{ copy.chapter.filter_placeholder }}"></label>
+        <label><span class="label-mono">{{ copy.chapter.kind_label }}</span>
+          <select class="field" data-filter-kind><option value="">{{ copy.chapter.kind_all }}</option>{% for k in kinds %}<option value="{{ k }}">{{ copy.chapter.no_link if k == "unlinked" else k }}</option>{% endfor %}</select>
+        </label>
+        <label class="check"><input type="checkbox" data-filter-unread> {{ copy.chapter.unread_only }}</label>
+        <span class="count" data-filter-count aria-live="polite"></span>
+      </div>
+
+      {% for kind, item in s.stream() %}
+        {% if kind == "entries" %}
+        <section class="part">
+          <ol class="entries">{% for e in item %}{{ m.entry(e) }}{% endfor %}</ol>
+        </section>
+        {% elif kind == "subsection" %}
+        <section class="part" aria-labelledby="{{ item.anchor }}">
+          <h2 id="{{ item.anchor }}">{{ item.title }}</h2>
+          <ol class="entries">{% for e in item.entries %}{{ m.entry(e) }}{% endfor %}</ol>
+        </section>
+        {% for r in item.reproduce %}
+        <section class="reproduce">
+          <p class="label-mono">{{ copy.chapter.reproduce }}</p>
+          <p>{{ r.description_html | safe }}</p>
+          {% if r.benchmark %}{{ m.callout(r.benchmark) }}{% endif %}
+        </section>
+        {% endfor %}
+        {% elif kind == "companion" %}
+        <p class="companion">{{ item.html | safe }}</p>
+        {% elif kind == "reproduce" %}
+        <section class="reproduce">
+          <p class="label-mono">{{ copy.chapter.reproduce }}</p>
+          <p>{{ item.description_html | safe }}</p>
+          {% if item.benchmark %}{{ m.callout(item.benchmark) }}{% endif %}
+        </section>
+        {% endif %}
+      {% endfor %}
+
+      {{ m.prevnext(s.prev, s.next, copy.chapter.prev, copy.chapter.next) }}
+    </div>
+
+    <aside class="aside">
+      {% if s.subsections %}
+      <nav class="toc" aria-label="{{ copy.chapter.on_this_page }}">
+        <p class="label-mono">{{ copy.chapter.on_this_page }}</p>
+        <ul>{% for sub in s.subsections %}<li><a href="#{{ sub.anchor }}">{{ sub.title }}</a></li>{% endfor %}</ul>
+      </nav>
+      {% endif %}
+      <div class="progress-box" data-progress-box="{{ s.slug }}" data-total="{{ s.entry_count }}" hidden>
+        <p class="label-mono"><span data-progress-count>0</span>/{{ s.entry_count }} {{ copy.chapter.progress }}</p>
+        <div class="meter"><i></i></div>
+      </div>
+      <div class="stack">
+        <a class="link-primary" href="{{ site.repo_url }}/blob/main/README.md#{{ s.anchor }}" rel="noopener">{{ copy.chapter.edit }}</a>
+        <a class="link-quiet" href="{{ site.repo_url }}/issues/new?template=dead-or-moved-link.md" rel="noopener">{{ copy.chapter.report }}</a>
+      </div>
+    </aside>
+  </div>
+</article>
+{% endblock %}

@@ -16,3 +16,8 @@ misc/mcp/.venv/
 misc/mcp/dist/
 misc/mcp/uv.lock
 .pytest_cache/
+# website build output
+misc/site/build/
+misc/site/dist/
+misc/site/test-results/
+misc/site/*.egg-info/

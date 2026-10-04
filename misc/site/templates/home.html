@@ -1,0 +1,116 @@
+{% extends "_base.html" %}
+{% import "_macros.html" as m with context %}
+{% from "_icons.html" import github_mark %}
+{% block main %}
+<section class="hero bg-graph">
+  <div class="container-lab hero-grid">
+    <div>
+      {{ m.eyebrow(copy.home.eyebrow) }}
+      <h1 class="hero-title" id="{{ site.title_anchor }}">{{ copy.home.heading }}</h1>
+      <p class="hero-lede">{{ site.intro.lede_html | safe }}</p>
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href="/mcp/quickstart/">{{ copy.home.cta_connect }}</a>
+        <a class="btn btn-outline" href="/learn/">{{ copy.home.cta_learn }}</a>
+        <a class="btn btn-outline" href="{{ site.repo_url }}" rel="noopener">{{ github_mark() }}{{ copy.global.github_name }}</a>
+        <a class="link-measure" href="/benchmarks/">{{ copy.home.cta_bench }}</a>
+      </div>
+      <dl class="stats">
+        <div><dt class="label-mono">{{ copy.home.stat_sections }}</dt><dd>{{ site.counts.sections }}</dd></div>
+        <div><dt class="label-mono">{{ copy.home.stat_sources }}</dt><dd>{{ site.counts.entries }}</dd></div>
+        <div><dt class="label-mono">{{ copy.home.stat_benchmarks }}</dt><dd>{{ site.counts.benchmarks }}</dd></div>
+      </dl>
+    </div>
+    <ol class="flow" aria-label="{{ copy.home.flow_label }}">
+      {% for f in copy.home.flow %}<li><span class="k">{{ f.k }}</span><p class="t">{{ f.t }}</p><p class="d">{{ f.d }}</p></li>
+      {% endfor %}
+    </ol>
+  </div>
+</section>
+
+<div class="container-lab">
+  <section class="band" aria-label="{{ copy.home.band_label }}">
+    {% for lead in site.intro.leads %}
+    <div><span class="k">{{ "%02d" | format(loop.index) }}</span><h2>{{ lead.lead }}</h2><p>{{ lead.html | safe }}</p></div>
+    {% endfor %}
+  </section>
+</div>
+
+<section class="container-lab mt-section">
+  <div class="section-head">
+    <div>{{ m.eyebrow(copy.home.path_eyebrow) }}<h2 class="h2">{{ site.counts.sections }} {{ copy.home.path_heading }}</h2></div>
+    <a class="link-primary small" href="/learn/">{{ copy.home.path_all }}</a>
+  </div>
+  <div class="cards cards-4">
+    {% for g in site.groups %}
+    <div class="card">
+      <p class="num">{{ g.range_label }}</p>
+      <h3>{{ g.name }}</h3>
+      <p class="blurb">{{ g.blurb }}</p>
+      <ol>
+        {% for s in g.sections %}<li><a href="{{ s.url }}"><span class="num">{{ s.number_label }}</span>{{ s.title }}</a></li>
+        {% endfor %}
+      </ol>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="ink-band">
+  <div class="container-lab">
+    <div>
+      <p class="label-mono">{{ copy.home.mcp_label }}</p>
+      {% if site.mcp.examples %}<h2 class="h2"><q>{{ site.mcp.examples[0] }}</q></h2>{% endif %}
+      {% for lead in site.intro.leads if lead.lead == "Ask it" %}<p class="lede">{{ lead.html | safe }}</p>{% endfor %}
+      {% for html in site.intro.after_commands %}<p class="lede small">{{ html | safe }}</p>{% endfor %}
+      <a class="link-primary small" href="/mcp/quickstart/">{{ copy.home.mcp_link }}</a>
+    </div>
+    <div class="stack">
+      {% for c in site.intro.commands %}{{ m.terminal(c.label, c.code) }}{% endfor %}
+    </div>
+  </div>
+</section>
+
+{% set b = site.featured %}
+{% if b %}
+<section class="container-lab mt-section">
+  {{ m.eyebrow(copy.home.featured_eyebrow) }}
+  <div class="section-head"><h2 class="h2">{{ b.title }}</h2><a class="link-measure small" href="{{ b.url }}">{{ copy.home.featured_link }}</a></div>
+  <p class="page-lede">{{ b.index_claim }}</p>
+  <div class="featured-grid">
+    {% if b.charts %}{{ m.chart_figure(b.charts[0]) }}{% endif %}
+    {{ m.passport(b, compact=True) }}
+  </div>
+</section>
+{% endif %}
+
+<section class="container-lab mt-section two-col">
+  <div>
+    {{ m.eyebrow(copy.home.standard_eyebrow) }}
+    <h2 class="h2-small">{{ copy.home.standard_heading }}</h2>
+    <ol class="rule-list">
+      {% for f in site.seven_fields %}<li><span class="n">{{ loop.index }}</span><span>{{ f }}</span></li>
+      {% endfor %}
+    </ol>
+    <a class="link-primary small" href="/evidence/">{{ copy.home.standard_link }}</a>
+  </div>
+  <div>
+    {{ m.eyebrow(copy.home.watch_eyebrow) }}
+    <h2 class="h2-small">{{ copy.home.watch_heading }}</h2>
+    <ul class="rule-list split">
+      {% for sub in site.watchlist.subsections %}<li><a class="hover-primary" href="/watchlist/#{{ sub.anchor }}">{{ sub.title }}</a><span class="num">{{ sub.entries | length }} {{ copy.home.watch_items }}</span></li>
+      {% endfor %}
+    </ul>
+    <a class="link-primary small" href="/watchlist/">{{ copy.home.watch_link }}</a>
+  </div>
+</section>
+
+<section class="container-lab mt-section">
+  <div class="cta-card">
+    <div><h2>{{ copy.home.contribute_heading }}</h2><p class="muted">{{ copy.home.contribute_text }}</p></div>
+    <div class="buttons">
+      <a class="btn btn-dark" href="{{ site.repo_url }}" rel="noopener">{{ copy.global.github }}</a>
+      <a class="btn btn-quiet" href="/evidence/#contributing">{{ copy.home.contribute_rules }}</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

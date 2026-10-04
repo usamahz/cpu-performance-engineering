@@ -1,0 +1,58 @@
+# Site configuration. Content never lives here: everything a page says about
+# CPUs comes from the repository through build/export.json. This file only
+# says how the pages are arranged.
+
+[site]
+name = "CPU Performance Engineering"
+short = "cpu-perf"
+mark = "CPE"
+repo = "https://github.com/usamahz/cpu-performance-engineering"
+lang = "en-GB"
+default_base_url = "http://localhost:8000"
+# The benchmark featured on the home page, beside its measurement passport.
+featured_benchmark = "04-cache-latency"
+
+# Primary navigation, in order.
+[[nav]]
+label = "Learn"
+href = "/learn/"
+[[nav]]
+label = "Benchmarks"
+href = "/benchmarks/"
+[[nav]]
+label = "MCP"
+href = "/mcp/"
+[[nav]]
+label = "Watchlist"
+href = "/watchlist/"
+[[nav]]
+label = "Evidence"
+href = "/evidence/"
+
+# The README's own ordering, from misc/notes/conventions.md ("Ordering"):
+# Start here, then sections that go down, then out, then the dated Watchlist.
+[[groups]]
+id = "start"
+sections = [1]
+[[groups]]
+id = "down"
+sections = [2, 3, 4, 5, 6]
+[[groups]]
+id = "out"
+sections = [7, 8, 9, 10, 11, 12, 13, 14, 15]
+[[groups]]
+id = "watch"
+sections = [16]
+
+# Slugs no section title may produce, because a page or file already uses them.
+[reserved]
+learn = ["all"]
+root = ["learn", "benchmarks", "mcp", "watchlist", "evidence", "search", "schema", "assets", "fonts", "js", "404"]
+
+# Size budgets the build check enforces, in bytes.
+[budgets]
+chapter_html = 153600
+record_html = 716800
+css_gzip = 12288
+js_gzip = 10240
+fonts = 204800

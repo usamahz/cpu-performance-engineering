@@ -1,0 +1,55 @@
+{% extends "_base.html" %}
+{% import "_macros.html" as m with context %}
+{% set mv = site.mcp %}
+{% set ts = mv.tools_section() %}
+{% block main %}
+{{ m.mcp_header(copy.mcp.nav_tools, copy.mcp.tools_heading, copy.mcp.tools_lede) }}
+{{ m.mcp_nav(active) }}
+<div class="container-lab with-aside">
+  <div class="main mcp-doc">
+    {{ m.surface_missing() }}
+    <section aria-labelledby="tools">
+      <h2 class="h2-section" id="tools">{{ mv.find("tools").title if mv.find("tools") else copy.mcp.tools_heading }}</h2>
+      <p class="muted small tools-note">{{ copy.mcp.access_note }}</p>
+      {% for t in mv.tools %}
+      {% set access = mv.tool_access(t) %}
+      <article class="tool" id="tool-{{ t.name }}" aria-labelledby="tool-{{ t.name }}-h">
+        <header class="tool-head">
+          <h3 id="tool-{{ t.name }}-h"><code>{{ t.name }}</code></h3>
+          {% if t.get("title") %}<span class="tool-title">{{ t.title }}</span>{% endif %}
+          <span class="badge badge-access-{{ access }}">{{ copy.mcp.access_network if access == "network" else copy.mcp.access_read }}</span>
+        </header>
+        {% if ts.summary.get(t.name) %}<p class="tool-summary">{{ ts.summary[t.name] | safe }}</p>{% endif %}
+        <p class="tool-desc">{{ t.get("description") | squash }}</p>
+        {% set params = mv.params(t) %}
+        {% if params %}
+        <div class="table-wrap" tabindex="0"><table class="param-table">
+          <thead><tr><th scope="col">{{ copy.mcp.param }}</th><th scope="col">{{ copy.mcp.type }}</th><th scope="col">{{ copy.mcp.get("description") }}</th></tr></thead>
+          <tbody>
+          {% for prm in params %}
+            <tr><td><code>{{ prm.name }}</code>{% if prm.required %} <span class="req">{{ copy.mcp.required }}</span>{% endif %}</td>
+            <td>{{ prm.type }}{% if prm.default is not none and not prm.required %}<br><span class="muted">{{ copy.mcp.default }} {{ prm.default }}</span>{% endif %}</td>
+            <td>{{ prm.description | squash }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table></div>
+        {% else %}<p class="muted small">{{ copy.mcp.no_params }}</p>{% endif %}
+      </article>
+      {% endfor %}
+      {% for html in ts.notes_html %}<div class="prose-lab muted-text">{{ html | safe }}</div>{% endfor %}
+    </section>
+    {% if mv.find("speed") %}
+    <section aria-labelledby="speed">
+      <h2 class="h2-section" id="speed">{{ mv.find("speed").title }}</h2>
+      <div class="prose-lab">{{ mv.body_html("speed") | safe }}</div>
+    </section>
+    {% endif %}
+  </div>
+  <aside class="aside">
+    <nav class="toc" aria-label="{{ copy.mcp.on_this_page }}">
+      <p class="label-mono">{{ copy.mcp.on_this_page }}</p>
+      <ul class="mono-list">{% for t in mv.tools %}<li><a href="#tool-{{ t.name }}">{{ t.name }}</a></li>{% endfor %}</ul>
+    </nav>
+  </aside>
+</div>
+{% endblock %}

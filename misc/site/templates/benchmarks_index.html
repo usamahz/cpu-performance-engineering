@@ -1,0 +1,55 @@
+{% extends "_base.html" %}
+{% import "_macros.html" as m with context %}
+{% set br = site.bench_readme %}
+{% block main %}
+<article data-filter-scope>
+  {% call m.page_header(copy.benchmarks.eyebrow, copy.benchmarks.heading, br.lede_html) %}{% endcall %}
+
+  <div class="container-lab mt-10">
+    <div class="filters" data-filter-for="lab" data-filter-items="tr[data-item]" role="group" aria-label="{{ copy.benchmarks.title }}" hidden>
+      <label><span class="label-mono">{{ copy.benchmarks.search }}</span><input class="field wide" type="search" data-filter-text placeholder="{{ copy.benchmarks.search_placeholder }}"></label>
+      <label><span class="label-mono">{{ copy.benchmarks.group }}</span>
+        <select class="field" data-filter-field="group"><option value="">{{ copy.benchmarks.group_all }}</option>{% for g in site.groups if g.sections | selectattr("benchmarks") | list %}<option value="{{ g.id }}">{{ g.name }}</option>{% endfor %}</select>
+      </label>
+      <label><span class="label-mono">{{ copy.benchmarks.threads }}</span>
+        <select class="field" data-filter-field="threads"><option value="">{{ copy.benchmarks.threads_all }}</option>{% for t in site.benchmarks | map(attribute="threads") | unique | sort %}<option value="{{ t }}">{{ t }}</option>{% endfor %}</select>
+      </label>
+      <label><span class="label-mono">{{ copy.benchmarks.neon }}</span>
+        <select class="field" data-filter-field="kernels"><option value="">{{ copy.benchmarks.neon_all }}</option><option value="neon">{{ copy.benchmarks.neon_yes }}</option><option value="portable">{{ copy.benchmarks.neon_no }}</option></select>
+      </label>
+      <span class="count" data-filter-count aria-live="polite"></span>
+    </div>
+
+    <div class="table-scroll" tabindex="0">
+      <table class="lab-table">
+        <caption class="sr-only">{{ copy.benchmarks.title }}</caption>
+        <thead><tr>
+          <th class="label-mono" scope="col">{{ copy.benchmarks.col_section }}</th>
+          <th class="label-mono" scope="col">{{ copy.benchmarks.col_claim }}</th>
+          <th class="label-mono hide-sm hide-md" scope="col">{{ copy.benchmarks.col_chapter }}</th>
+          <th class="label-mono hide-sm hide-lg" scope="col">{{ copy.benchmarks.col_type }}</th>
+        </tr></thead>
+        <tbody>
+        {% for b in site.benchmarks %}
+          <tr data-item id="{{ b.slug }}" data-group="{{ b.section.group.id if b.section and b.section.group else '' }}" data-threads="{{ b.threads }}" data-kernels="{{ 'neon' if b.neon else 'portable' }}">
+            <td class="sec">{{ b.section_label }}</td>
+            <td><a class="t" href="{{ b.url }}">{{ b.title }}</a><p class="claim">{{ b.index_claim }}</p></td>
+            <td class="hide-sm hide-md">{% if b.section %}<a class="hover-primary" href="{{ b.section.url }}">{{ b.section.title }}</a>{% endif %}</td>
+            <td class="type hide-sm hide-lg">{{ b.threads }}{% if b.neon %}<br>{{ copy.benchmarks.neon_yes }}{% endif %}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="lab-notes">
+      {% for sec in br.sections %}
+      <section aria-labelledby="{{ sec.anchor }}">
+        <h2 class="h2-small" id="{{ sec.anchor }}">{{ sec.title }}</h2>
+        <div class="prose-lab muted">{{ sec.html | safe }}</div>
+      </section>
+      {% endfor %}
+    </div>
+  </div>
+</article>
+{% endblock %}

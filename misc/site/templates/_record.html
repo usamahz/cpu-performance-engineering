@@ -1,0 +1,56 @@
+{# Rows of the editorial record, shared by the record pages. #}
+
+{% macro section_head(n) %}{% set sec = site.section_by_number.get(n) %}
+<h3 class="record-sec"><span class="n">§{{ "%02d" % n }}</span>{% if sec %}<a href="{{ sec.url }}">{{ sec.title }}</a>{% endif %}</h3>
+{% endmacro %}
+
+{% macro source_link(r) %}<a href="{{ r.source_url }}">{{ copy.record.source }} {{ r.line }} ↗</a>{% endmacro %}
+
+{% macro rejected_row(r) %}
+<li id="{{ r.id }}" data-item data-section="{{ r.section }}" data-category="{{ r.category }}">
+<div class="record-head">
+<a class="rid" href="#{{ r.id }}">{{ r.id }}</a>
+{% if r.urls %}<a class="record-title" href="{{ r.urls[0] }}" rel="nofollow noopener">{{ r.title }}</a>{% else %}<span class="record-title">{{ r.title }}</span>{% endif %}
+<span class="badge badge-cat">{{ copy.record.categories[r.category] }}</span>
+{% for n in r.rules %}<span class="badge">{{ copy.record.rule }} {{ n }}</span>{% endfor %}
+</div>
+<p class="record-text">{{ r.html | safe }}</p>
+<p class="record-meta">
+{% if r.listed_in %}<span>{{ copy.record.listed_in }} {% for s in r.listed_in %}<a href="{{ s.url }}">§{{ s.number }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</span>{% endif %}
+{{ source_link(r) }}
+</p>
+</li>
+{% endmacro %}
+
+{% macro claim_row(c) %}
+<li id="{{ c.id }}" data-item data-section="{{ c.section }}" data-verdict="{{ c.verdict or 'none' }}" data-missing="{{ c.missing_fields | join(' ') }}">
+<div class="record-head">
+<a class="rid" href="#{{ c.id }}">{{ c.id }}</a>
+{% if c.quote %}<q class="record-quote">{{ c.quote }}</q>{% endif %}
+<span class="badge badge-verdict-{{ c.verdict or 'none' }}">{{ copy.record.verdicts[c.verdict or 'none'] }}</span>
+</div>
+<p class="record-text">{{ c.html | safe }}</p>
+<p class="record-meta">
+{% if c.missing_fields %}<span>{{ copy.record.missing }}: {% for f in c.missing_fields %}<abbr title="{{ site.seven_fields[f - 1] }}">{{ f }}</abbr>{% if not loop.last %}, {% endif %}{% endfor %}</span>{% endif %}
+{% for u in c.urls %}<a href="{{ u }}">{{ u | host }}</a>{% endfor %}
+{{ source_link(c) }}
+</p>
+</li>
+{% endmacro %}
+
+{% macro note_row(n) %}
+<li id="{{ n.id }}" data-item data-section="{{ n.section }}">
+<div class="record-head">
+<a class="rid" href="#{{ n.id }}">{{ n.id }}</a>
+{% for u in n.urls %}<a class="record-url" href="{{ u }}">{{ u | host }}</a>{% endfor %}
+</div>
+<p class="record-text">{{ n.html | safe }}</p>
+<p class="record-meta">{{ source_link(n) }}</p>
+</li>
+{% endmacro %}
+
+{% macro section_select() %}
+<label><span class="label-mono">{{ copy.record.section }}</span>
+  <select class="field" data-filter-field="section"><option value="">{{ copy.record.section_all }}</option>{% for s in site.sections %}<option value="{{ s.number }}">§{{ s.number }} {{ s.title }}</option>{% endfor %}</select>
+</label>
+{% endmacro %}

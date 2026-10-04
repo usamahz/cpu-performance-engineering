@@ -1,0 +1,56 @@
+{% extends "_base.html" %}
+{% import "_macros.html" as m with context %}
+{% set mv = site.mcp %}
+{% set ts = mv.tools_section() %}
+{% set first_bench = site.benchmarks[0] if site.benchmarks else none %}
+{% set first_entry = site.entries.values() | first %}
+{% set example = {
+  "cpuperf://readme": "/learn/all/", "cpuperf://contents": "/learn/", "cpuperf://rules": "/evidence/",
+  "cpuperf://watchlist": "/watchlist/", "cpuperf://benchmarks": "/benchmarks/"} %}
+{% block main %}
+{{ m.mcp_header(copy.mcp.nav_resources, copy.mcp.resources_heading, copy.mcp.resources_lede) }}
+{{ m.mcp_nav(active) }}
+<div class="container-lab mcp-body">
+  {{ m.surface_missing() }}
+  {% if ts.resources_html %}<div class="prose-lab muted-text">{{ ts.resources_html | safe }}</div>{% endif %}
+  <div class="two-col resources-grid">
+    <section aria-labelledby="fixed">
+      <h2 class="h2-section" id="fixed">{{ copy.mcp.fixed }}</h2>
+      <ul class="resource-list">
+        {% for r in mv.named_resources %}
+        <li>
+          {{ m.resource(r.uri) }}
+          <p class="r-title">{{ r.get("title") or r.name }}</p>
+          {% if r.get("description") %}<p class="muted small">{{ r.get("description") | squash }}</p>{% endif %}
+          {% if example.get(r.uri) %}<p class="r-site"><span class="label-mono">{{ copy.mcp.example }}</span> <a href="{{ example[r.uri] }}">{{ example[r.uri] }}</a></p>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      <details class="raw">
+        <summary>{{ copy.mcp.files }} · {{ mv.file_resources | length }}</summary>
+        <ul class="file-uris">{% for r in mv.file_resources %}<li><code>{{ r.uri }}</code> <a href="{{ site.links.blob(r.uri[15:]) }}" rel="noopener">↗</a></li>{% endfor %}</ul>
+      </details>
+    </section>
+    <section aria-labelledby="templates">
+      <h2 class="h2-section" id="templates">{{ copy.mcp.templates }}</h2>
+      <ul class="resource-list">
+        {% for t in mv.templates %}
+        <li>
+          {{ m.resource(t.uriTemplate) }}
+          <p class="r-title">{{ t.get("title") or t.name }}</p>
+          {% if t.get("description") %}<p class="muted small">{{ t.get("description") | squash }}</p>{% endif %}
+          {% set u = t.uriTemplate %}
+          {% if u.startswith("cpuperf://section/") and site.chapters %}{% set s = site.chapters[3] if site.chapters | length > 3 else site.chapters[0] %}
+          <p class="r-site"><span class="label-mono">{{ copy.mcp.example }}</span> <code>{{ s.mcp_resource }}</code> → <a href="{{ s.url }}">{{ s.url }}</a></p>
+          {% elif u.startswith("cpuperf://benchmark/") and first_bench %}
+          <p class="r-site"><span class="label-mono">{{ copy.mcp.example }}</span> <code>{{ first_bench.mcp_resource }}</code> → <a href="{{ first_bench.url }}">{{ first_bench.url }}</a></p>
+          {% elif u.startswith("cpuperf://entry/") and first_entry %}
+          <p class="r-site"><span class="label-mono">{{ copy.mcp.example }}</span> <code>cpuperf://entry/{{ first_entry.id }}</code> → <a href="{{ first_entry.page }}">{{ first_entry.title }}</a></p>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+  </div>
+</div>
+{% endblock %}

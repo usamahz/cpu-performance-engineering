@@ -1,0 +1,31 @@
+{% extends "_base.html" %}
+{% import "_macros.html" as m with context %}
+{% block main %}
+{% call m.page_header(copy.all.eyebrow, copy.all.title, copy.all.lede, site.title_anchor) %}{% endcall %}
+<div class="container-lab" id="contents">
+  {% for s in site.sections %}
+  <section class="all-section">
+    <h2 id="{{ s.anchor }}"><span class="num">{{ s.number_label }}</span><a href="{{ s.url }}">{{ s.title }}</a></h2>
+    {% if s.preamble %}<p class="companion">{{ s.preamble_html | safe }}</p>{% endif %}
+    {% for kind, item in s.stream() %}
+      {% if kind == "entries" %}<ol class="entries">{% for e in item %}{{ m.entry(e) }}{% endfor %}</ol>
+      {% elif kind == "subsection" %}
+        <h3 id="{{ item.anchor }}">{{ item.title }}</h3>
+        <ol class="entries">{% for e in item.entries %}{{ m.entry(e) }}{% endfor %}</ol>
+        {% for r in item.reproduce %}<p class="companion">{{ copy.chapter.reproduce }}: <a href="{{ r.benchmark.url if r.benchmark else '/benchmarks/' }}">{{ r.slug }}</a>, {{ r.description_html | safe }}</p>{% endfor %}
+      {% elif kind == "companion" %}<p class="companion">{{ item.html | safe }}</p>
+      {% elif kind == "reproduce" %}<p class="companion">{{ copy.chapter.reproduce }}: <a href="{{ item.benchmark.url if item.benchmark else '/benchmarks/' }}">{{ item.slug }}</a>, {{ item.description_html | safe }}</p>
+      {% endif %}
+    {% endfor %}
+  </section>
+  {% endfor %}
+  <section class="all-section">
+    <h2 id="what-earns-a-place"><a href="/evidence/#what-earns-a-place">What earns a place</a></h2>
+    <div class="prose-lab">{{ site.admission_html | safe }}</div>
+  </section>
+  <section class="all-section">
+    <h2 id="license">License</h2>
+    <div class="prose-lab">{{ site.license_text | safe }}</div>
+  </section>
+</div>
+{% endblock %}

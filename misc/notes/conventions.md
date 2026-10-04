@@ -6,8 +6,12 @@ written down here.
 ## What the list is
 
 A single README that is a reading path first and a reference second. The
-README is the whole product: no site, no generated index, no per-topic
-pages. Everything else in the repository exists to keep it honest, namely
+README is the whole product: no generated index and no per-topic pages are
+committed, and nothing is written anywhere first and copied in. The
+website built from `misc/site/` is a rendering of the README and the files
+beside it at one commit: it adds no entry, claim or number, it is never
+edited by hand, and its build fails when a page drifts from the README.
+Everything else in the repository exists to keep the README honest, namely
 the format linter, the link checker, the benchmarks and the contribution
 rules.
 
@@ -114,3 +118,9 @@ here rather than in the core even when the mechanism itself is real.
   lives in memory and in a library each user builds from the linked URLs on
   their own machine; nothing generated is committed, and the README stays the
   whole product.
+- `misc/site/` builds the website with the MCP server's parser, from the
+  README, the benchmarks, the drafts and the server's own tool list, and
+  publishes it to GitHub Pages on every merge to `main`. Its check fails
+  when a page loses an entry, an anchor or a chart value, or when its
+  counts disagree with an independent walk of the README; nothing it
+  generates is committed.

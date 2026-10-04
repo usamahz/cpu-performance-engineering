@@ -1,0 +1,65 @@
+{% extends "_base.html" %}
+{% import "_macros.html" as m with context %}
+{% set ev = site.evidence %}
+{% block main %}
+<article>
+  {% call m.page_header(copy.evidence.eyebrow, copy.evidence.heading, "", "what-earns-a-place") %}{% endcall %}
+
+  <div class="container-lab with-aside evidence">
+    <div class="main">
+      <section aria-labelledby="seven-fields">
+        <h2 class="h2-section" id="seven-fields">{{ copy.evidence.seven }}</h2>
+        <ol class="field-list">
+          {% for f in site.seven_fields %}<li><span class="n">{{ loop.index }}</span>{{ f }}</li>
+          {% endfor %}
+        </ol>
+        <div class="prose-lab muted-text">{{ ev.after_html | safe }}</div>
+      </section>
+
+      <section aria-labelledby="sources">
+        <h2 class="h2-section" id="sources">{{ copy.evidence.qualifies }}</h2>
+        {% for html in ev.rest_html %}
+        <div class="prose-lab muted-text">{{ html | safe }}</div>
+        {% if loop.first %}
+        <p class="badge-row">{% for k in kinds if k != "unlinked" %}{{ m.badge(k) }}{% endfor %}</p>
+        <p class="xs muted">{{ copy.evidence.badges_note }}</p>
+        {% endif %}
+        {% endfor %}
+      </section>
+
+      <section aria-labelledby="contributing">
+        <h2 class="h2-section" id="contributing">{{ copy.evidence.contributing }}</h2>
+        <div class="prose-lab">{{ ev.contributing_html | safe }}</div>
+      </section>
+
+      <section aria-labelledby="license">
+        <h2 class="h2-section" id="license">License</h2>
+        <div class="prose-lab muted-text">{{ site.license_text | safe }}</div>
+      </section>
+    </div>
+
+    <aside class="aside">
+      <div class="card-note">
+        <p class="label-mono">{{ copy.evidence.checked_label }}</p>
+        <p>{{ copy.evidence.checked_text }}</p>
+      </div>
+      <div class="card-note">
+        <p class="label-mono">{{ copy.evidence.record_counts }}</p>
+        <ul class="count-list">
+          <li><a href="/evidence/record/#rejected">{{ copy.record.rejected }}</a><span>{{ site.rejected | length }}</span></li>
+          <li><a href="/evidence/record/#claims">{{ copy.record.claims }}</a><span>{{ site.claims | length }}</span></li>
+          <li><a href="/evidence/record/link-notes/">{{ copy.record.link_notes }}</a><span>{{ site.link_notes | length }}</span></li>
+        </ul>
+        <a class="link-primary small" href="/evidence/record/">{{ copy.evidence.record_link }}</a>
+      </div>
+      <div class="card-note">
+        <p class="label-mono">{{ copy.evidence.prompts }}</p>
+        <p>{{ copy.evidence.prompts_text }}</p>
+        {{ m.prompt_cmd("audit_claim") }}
+        {{ m.prompt_cmd("review_candidate") }}
+      </div>
+      <a class="link-primary small" href="{{ site.repo_url }}/issues/new/choose" rel="noopener">{{ copy.evidence.concern }}</a>
+    </aside>
+  </div>
+</article>
+{% endblock %}

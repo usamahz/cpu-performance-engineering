@@ -1,0 +1,23 @@
+{% extends "_base.html" %}
+{% import "_macros.html" as m with context %}
+{% import "_record.html" as rec with context %}
+{% block main %}
+<article data-filter-scope>
+  {% call m.page_header('<a href="/evidence/">' ~ copy.evidence.title ~ '</a> / <a href="/evidence/record/">' ~ copy.record.title ~ '</a>', copy.record.link_notes, copy.record.link_notes_lede) %}{% endcall %}
+
+  <div class="container-lab mt-10">
+    <div class="filters" data-filter-for="notes" data-filter-items="li[data-item]" data-filter-groups=".record-group" role="group" aria-label="{{ copy.record.filter }}" hidden>
+      <label><span class="label-mono">{{ copy.record.filter }}</span><input class="field wide" type="search" data-filter-text placeholder="{{ copy.record.filter_placeholder }}"></label>
+      {{ rec.section_select() }}
+      <span class="count" data-filter-count aria-live="polite"></span>
+    </div>
+    {% for n, items in site.link_notes | groupby("section") %}
+    <section class="record-group">
+      {{ rec.section_head(n) }}
+      <ol class="record-list">{% for l in items %}{{ rec.note_row(l) }}{% endfor %}</ol>
+    </section>
+    {% endfor %}
+    <p class="mt-10"><a class="link-primary" href="/evidence/record/">{{ copy.record.back }}</a></p>
+  </div>
+</article>
+{% endblock %}

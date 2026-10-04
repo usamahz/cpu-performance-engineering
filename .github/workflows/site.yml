@@ -1,0 +1,130 @@
+name: Site
+
+# Builds the website from this commit, checks it against the README, runs
+# its browser tests, and on main publishes it to GitHub Pages. Publishing
+# waits for the repository variable SITE_URL (https://cpu-perf.com), so
+# nothing deploys until Pages and the domain are set up.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    name: Build and check
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # the sitemap's lastmod comes from git log
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            misc/site/pyproject.toml
+            misc/mcp/pyproject.toml
+      - name: Install the site and the MCP server
+        run: python -m pip install -e misc/site ./misc/mcp
+      - name: Export the corpus
+        run: python misc/site/scripts/export_corpus.py
+      - name: Export the MCP server's surface
+        run: python misc/site/scripts/export_mcp.py
+      - name: Build
+        run: python -m cpu_perf_site build --base-url "$BASE_URL"
+        env:
+          BASE_URL: ${{ vars.SITE_URL || 'http://localhost:8000' }}
+      - name: Check the site against the README
+        run: python -m cpu_perf_site check --base-url "$BASE_URL"
+        env:
+          BASE_URL: ${{ vars.SITE_URL || 'http://localhost:8000' }}
+      - name: Lint the site's own copy
+        run: python misc/site/scripts/check_copy.py
+      - name: Unit tests
+        run: python -m unittest discover -s misc/site/tests
+      - name: Keep the built site
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: misc/site/dist
+          retention-days: 7
+      - name: Package for Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.SITE_URL != ''
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: misc/site/dist
+
+  anchors:
+    name: Anchors match GitHub's renderer
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Export the corpus (standard library only)
+        run: python misc/site/scripts/export_corpus.py
+      - name: Compare with GitHub's markdown API
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python misc/site/scripts/check_github_anchors.py
+
+  e2e:
+    name: Browser tests
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: misc/site/pyproject.toml
+      - name: Install the test dependencies
+        run: python -m pip install -e "misc/site[e2e]"
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: misc/site/dist
+      - name: Every page type, with axe-core, in Chrome
+        env:
+          E2E_CHANNEL: chrome
+        run: python -m unittest discover -s misc/site/tests/e2e -v
+      - name: Screenshots of failures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots
+          path: misc/site/test-results
+          if-no-files-found: ignore
+
+  deploy:
+    name: Publish to GitHub Pages
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.SITE_URL != ''
+    needs: [build, anchors, e2e]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
