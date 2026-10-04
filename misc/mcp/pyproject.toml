@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cpu-perf"
-version = "0.1.0rc1"
+version = "0.1.0"
 description = "MCP server for the CPU Performance Engineering list: the reading list, its editorial record, its benchmarks and a searchable local index of every linked source."
 readme = "README.md"
 requires-python = ">=3.10"

@@ -35,10 +35,7 @@ Your AI client starts the server itself, with [uv](https://docs.astral.sh/uv/):
 it runs `uvx cpu-perf`, which fetches the release and starts it. Add that
 command to your client once, as below; run in a terminal, it only waits for
 a client. (`pip install cpu-perf` works too and gives the same `cpu-perf`
-command.
-Until the first release is on PyPI, use
-`uvx --from "git+https://github.com/usamahz/cpu-performance-engineering#subdirectory=misc/mcp" cpu-perf`
-wherever `uvx cpu-perf` appears below.)
+command.)
 
 The first start downloads its dependencies, which can take longer than some
 clients wait for a new server. Run `uvx cpu-perf --version` once in a
@@ -381,9 +378,10 @@ stand-in for GitHub. With `CPU_PERF_EVAL_DB` pointing at a crawled
 
 ## Releasing
 
-Tag a version that matches `pyproject.toml`, a release candidate first:
+Set the version in `pyproject.toml`, merge, then tag the merge commit on
+`main` with the same version:
 
-    git tag mcp-v0.1.0rc1 && git push origin mcp-v0.1.0rc1
+    git tag mcp-v0.1.1 && git push origin mcp-v0.1.1
 
 `.github/workflows/mcp-release.yml` builds, tests and publishes to PyPI with
 trusted publishing. Once, before the first release: on PyPI add a pending
@@ -391,9 +389,9 @@ publisher for project `cpu-perf`, owner `usamahz`, repository
 `cpu-performance-engineering`, workflow `mcp-release.yml`, environment
 `pypi`. GitHub creates the `pypi` environment on the first run.
 
-A release candidate installs with `uvx cpu-perf@0.1.0rc1` (or
-`pip install cpu-perf==0.1.0rc1`); while it is the only version on PyPI,
-plain `uvx cpu-perf` picks it too.
+A release candidate (`0.1.1rc1`, say) is tagged the same way; it installs
+only when asked for by version, with `uvx cpu-perf@0.1.1rc1`, so testing one
+never reaches people on the latest release.
 
 ## Licence
 
