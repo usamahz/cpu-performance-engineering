@@ -1,7 +1,7 @@
 # site
 
 The website for the list, generated from this repository at one commit
-and published to GitHub Pages. The README stays the product: every page is
+and published on Vercel. The README stays the product: every page is
 built from the README, CONTRIBUTING.md, `misc/benchmarks/`, the section
 drafts in `misc/notes/sections/` and `misc/mcp/README.md`, adds no entry,
 claim or number of its own, and is never edited by hand. Nothing generated
@@ -25,6 +25,16 @@ stdio and records what it lists (tools, prompts, resources, templates), so
 the MCP pages cannot describe something the server does not have. Pass
 `--base-url https://cpu-perf.com` to `build` for absolute URLs in the
 sitemap, the feeds and the Markdown twins.
+
+## Publish it
+
+Vercel builds and serves the site. `vercel.json` here runs
+`scripts/vercel_build.sh`, which does the steps above in a virtualenv and
+fails the deployment when the check fails; `main` goes to production and
+every pull request gets a preview. One-time setup in Vercel: import the
+repository, set **Root Directory** to `misc/site` (leave source files
+outside it included), and add the domain. Pages carry the production
+domain in their canonical links, or `SITE_URL` when that variable is set.
 
 ## What it publishes
 

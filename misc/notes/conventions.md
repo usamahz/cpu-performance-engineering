@@ -120,7 +120,7 @@ here rather than in the core even when the mechanism itself is real.
   whole product.
 - `misc/site/` builds the website with the MCP server's parser, from the
   README, the benchmarks, the drafts and the server's own tool list, and
-  publishes it to GitHub Pages on every merge to `main`. Its check fails
+  publishes it on Vercel on every merge to `main`. Its check fails
   when a page loses an entry, an anchor or a chart value, or when its
   counts disagree with an independent walk of the README; nothing it
   generates is committed.

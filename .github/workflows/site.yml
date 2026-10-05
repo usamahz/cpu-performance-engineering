@@ -1,9 +1,9 @@
 name: Site
 
-# Builds the website from this commit, checks it against the README, runs
-# its browser tests, and on main publishes it to GitHub Pages. Publishing
-# waits for the repository variable SITE_URL (https://cpu-perf.com), so
-# nothing deploys until Pages and the domain are set up.
+# Builds the website from this commit, checks it against the README and
+# runs its browser tests. Vercel publishes it: misc/site/vercel.json runs
+# the same build and check there, for main and for every pull request's
+# preview.
 
 on:
   pull_request:
@@ -58,11 +58,6 @@ jobs:
           name: site
           path: misc/site/dist
           retention-days: 7
-      - name: Package for Pages
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.SITE_URL != ''
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: misc/site/dist
 
   anchors:
     name: Anchors match GitHub's renderer
@@ -109,22 +104,3 @@ jobs:
           name: e2e-screenshots
           path: misc/site/test-results
           if-no-files-found: ignore
-
-  deploy:
-    name: Publish to GitHub Pages
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.SITE_URL != ''
-    needs: [build, anchors, e2e]
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      pages: write
-      id-token: write
-    concurrency:
-      group: pages
-      cancel-in-progress: false
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
