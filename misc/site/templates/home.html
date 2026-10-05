@@ -60,7 +60,7 @@
     <div>
       <p class="label-mono">{{ copy.home.mcp_label }}</p>
       {% if site.mcp.examples %}<h2 class="h2"><q>{{ site.mcp.examples[0] }}</q></h2>{% endif %}
-      {% for lead in site.intro.leads if lead.lead == "Ask it" %}<p class="lede">{{ lead.html | safe }}</p>{% endfor %}
+      {% for lead in site.intro.leads if lead.lead == "Plug it in" %}<p class="lede">{{ lead.html | safe }}</p>{% endfor %}
       {% for html in site.intro.after_commands %}<p class="lede small">{{ html | safe }}</p>{% endfor %}
       <a class="link-primary small" href="/mcp/quickstart/">{{ copy.home.mcp_link }}</a>
     </div>

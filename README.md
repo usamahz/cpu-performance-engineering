@@ -22,12 +22,12 @@ number, anywhere in this repository, carries all seven fields set out in
 [misc/benchmarks/](misc/benchmarks/README.md): C source, the build line, the
 machine, the raw numbers and the analysis, all committed. Run them yourself.
 
-**Ask it.** The MCP server in [misc/mcp/](misc/mcp/README.md) gives any AI
-client this list in reading order, the rejected candidates with the rule
-each failed, every benchmark, and a searchable index of the linked sources
-themselves, built on the reader's own machine, so answers come from the
-sources and cite them. With [uv](https://docs.astral.sh/uv/) installed, one
-command adds it.
+**Plug it in.** The MCP server in [misc/mcp/](misc/mcp/README.md) turns
+this list into a CPU performance brain inside any AI client: the reading
+order, every rejected candidate with the rule it failed, every benchmark,
+and an index of the linked sources built on the reader's own machine. Point
+it at real work and the answers quote those sources and cite them. With
+[uv](https://docs.astral.sh/uv/) installed, one command adds it.
 
 **Claude Code**
 
