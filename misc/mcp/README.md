@@ -393,6 +393,15 @@ A release candidate (`0.1.1rc1`, say) is tagged the same way; it installs
 only when asked for by version, with `uvx cpu-perf@0.1.1rc1`, so testing one
 never reaches people on the latest release.
 
+The same workflow then lists the release in the
+[MCP Registry](https://registry.modelcontextprotocol.io) from `server.json`,
+signing in with the workflow's own GitHub identity, so a release needs no
+other step. `server.json` carries the same version as `pyproject.toml`. The
+registry proves the PyPI package belongs to the listing by finding this line
+in the README as PyPI shows it, so it stays here:
+
+    mcp-name: io.github.usamahz/cpu-perf
+
 ## Licence
 
 MIT, as the repository. The wheel carries the repository's files and its
