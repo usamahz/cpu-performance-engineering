@@ -157,6 +157,7 @@ Vendors name the same structures differently (Intel's decoded ICache is AMD's op
 - [Software Optimization Guide for the AMD Zen5 Microarchitecture](https://docs.amd.com/v/u/en-US/58455_1.00) - Where AMD states when the op cache feeds micro-ops, and the fusion and alignment rules for hot loops.
 - [The microarchitecture of Intel, AMD, and VIA CPUs](https://www.agner.org/optimize/microarchitecture.pdf) - Measures rather than quotes each x86 core's misprediction penalty, micro-op cache and loop buffer behaviour.
 - [Intel Mitigations for Jump Conditional Code Erratum](https://www.intel.com/content/www/us/en/content-details/841076/intel-mitigations-for-jump-conditional-code-erratum.html) - States what a microcode fix evicts from the decoded cache and which counters show the fall back to legacy decode.
+- [Composite Instruction Prefetching](https://doi.org/10.1109/ICCD56317.2022.00076) - Establishes how complementary instruction prefetchers can be combined rather than selecting a single design.
 
 Reproduce it: [misc/benchmarks/02-branch-misprediction](misc/benchmarks/02-branch-misprediction/README.md), the cost of a mispredicted branch, sorted against unsorted against branchless.
 
@@ -230,6 +231,7 @@ Line size and page size are machine parameters, not constants, so every padding 
 - [Achieving Non-Inclusive Cache Performance with Inclusive Caches](https://www.jaleels.org/ajaleel/publications/micro2010-tla.pdf) - Names inclusion victims as the cost of an inclusive last-level cache, the case for non-inclusive and victim designs.
 - [Adaptive Insertion Policies for High Performance Caching](https://dl.acm.org/doi/10.1145/1250662.1250709) - The origin of set duelling and bimodal insertion, the adaptive replacement that survives a streaming pass.
 - [Lockup-Free Instruction Fetch/Prefetch Cache Organization](https://dl.acm.org/doi/10.1145/285930.285979) - Origin of the lockup-free cache, whose miss-status registers keep misses in flight, so a stream beats a chase.
+- [Dynamic Set Stealing to Improve Cache Performance](https://doi.org/10.1109/SBAC-PAD55451.2022.00017) - Introduces dynamic set stealing as a cache-management mechanism beyond insertion and replacement within a fixed set.
 
 Reproduce it: [misc/benchmarks/04-cache-latency](misc/benchmarks/04-cache-latency/README.md), dependent-load latency from L1 to DRAM, with and without TLB pressure.
 
@@ -240,6 +242,7 @@ Reproduce it: [misc/benchmarks/04-cache-latency](misc/benchmarks/04-cache-latenc
 - [Improving Direct-Mapped Cache Performance](https://ieeexplore.ieee.org/document/134547) - The origin of the stream buffer that every vendor stream prefetcher descends from, and of the victim cache.
 - [Intel Optimization Reference Manual Volume 1](https://www.intel.com/content/www/us/en/content-details/671488/intel-64-and-ia-32-architectures-optimization-reference-manual-volume-1.html) - Names each prefetcher and what trains it, and which stop at a page boundary and which cross it.
 - [Arm Neoverse V2 Core Technical Reference Manual](https://support.arm.com/documentation/102375/latest/) - Names an Arm server core's load-side and store-side prefetchers, its TLB levels and the bits that disable them.
+- [CHiRP: Control-Flow History Reuse Prediction](https://people.engr.tamu.edu/djimenez/pdfs/CHiRP_MICRO2020_CameraReady.pdf) - Uses control-flow history to predict translation reuse and guide replacement in the TLB.
 
 ### Store buffers, ordering and cache-line contention
 
