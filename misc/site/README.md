@@ -23,7 +23,7 @@ From the repository root, with Python 3.11 or later:
 it needs only the standard library. `export_mcp.py` starts the server over
 stdio and records what it lists (tools, prompts, resources, templates), so
 the MCP pages cannot describe something the server does not have. Pass
-`--base-url https://cpu-perf.com` to `build` for absolute URLs in the
+`--base-url https://cpuperf.com` to `build` for absolute URLs in the
 sitemap, the feeds and the Markdown twins.
 
 ## What it publishes

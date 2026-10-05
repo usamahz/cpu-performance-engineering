@@ -29,7 +29,7 @@ def main(argv: list[str] | None = None) -> int:
         p = sub.add_parser(name)
         p.add_argument("--data", default=str(SITE_ROOT / "build"), help="directory holding export.json")
         p.add_argument("--out", default=str(SITE_ROOT / "dist"), help="output directory")
-        p.add_argument("--base-url", default=None, help="absolute site URL, e.g. https://cpu-perf.com")
+        p.add_argument("--base-url", default=None, help="absolute site URL, e.g. https://cpuperf.com")
     sub.choices["serve"].add_argument("--port", type=int, default=8000)
     sub.choices["check"].add_argument("--strict", action="store_true", help="treat warnings as failures")
     args = ap.parse_args(argv)
