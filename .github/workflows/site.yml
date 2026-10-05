@@ -2,7 +2,7 @@ name: Site
 
 # Builds the website from this commit, checks it against the README, runs
 # its browser tests, and on main publishes it to GitHub Pages. Publishing
-# waits for the repository variable SITE_URL (https://cpu-perf.com), so
+# waits for the repository variable SITE_URL (https://cpuperf.com), so
 # nothing deploys until Pages and the domain are set up.
 
 on:

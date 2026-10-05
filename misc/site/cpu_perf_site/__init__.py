@@ -1,4 +1,4 @@
-"""cpu-perf.com: a static rendering of the CPU Performance Engineering list.
+"""cpuperf.com: a static rendering of the CPU Performance Engineering list.
 
 The site never parses the README itself. scripts/export_corpus.py runs the
 MCP server's parser (cpu_perf.corpus) and writes build/export.json; this

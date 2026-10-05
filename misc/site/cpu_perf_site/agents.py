@@ -144,7 +144,7 @@ def corpus_schema() -> dict:
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "$id": f"{SCHEMA_ID}/{SCHEMA_VERSION}",
-        "title": "cpu-perf.com corpus",
+        "title": "cpuperf.com corpus",
         "type": "object",
         "required": ["schema", "schema_version", "source", "counts", "corpus", "derived"],
         "properties": {
