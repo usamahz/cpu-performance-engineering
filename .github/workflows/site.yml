@@ -1,9 +1,10 @@
 name: Site
 
 # Builds the website from this commit, checks it against the README, runs
-# its browser tests, and on main publishes it to GitHub Pages. Publishing
-# waits for the repository variable SITE_URL (https://cpuperf.com), so
-# nothing deploys until Pages and the domain are set up.
+# its browser tests, and on main (a push or a manual run) publishes it to
+# GitHub Pages. Publishing waits for the repository variable SITE_URL
+# (https://cpuperf.com), so nothing deploys until Pages and the domain are
+# set up.
 
 on:
   pull_request:
@@ -59,7 +60,7 @@ jobs:
           path: misc/site/dist
           retention-days: 7
       - name: Package for Pages
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.SITE_URL != ''
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.SITE_URL != ''
         uses: actions/upload-pages-artifact@v3
         with:
           path: misc/site/dist
@@ -112,7 +113,7 @@ jobs:
 
   deploy:
     name: Publish to GitHub Pages
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.SITE_URL != ''
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.SITE_URL != ''
     needs: [build, anchors, e2e]
     runs-on: ubuntu-latest
     timeout-minutes: 10
