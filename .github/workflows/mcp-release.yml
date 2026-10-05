@@ -55,3 +55,34 @@ jobs:
           name: dist
           path: dist/
       - uses: pypa/gh-action-pypi-publish@release/v1
+
+  registry:
+    name: List in the MCP Registry
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write  # the registry signs in with this workflow's GitHub identity; no secret
+    steps:
+      - uses: actions/checkout@v4
+      - name: server.json names the tagged version
+        run: |
+          version="${GITHUB_REF_NAME#mcp-v}"
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          jq -e --arg v "$version" '.version == $v and (.packages | all(.version == $v))' misc/mcp/server.json
+      - name: Wait for the release on PyPI, with its mcp-name line
+        run: |
+          for i in $(seq 1 30); do
+            curl -fsS "https://pypi.org/pypi/cpu-perf/$VERSION/json" -o pypi.json && break
+            sleep 10
+          done
+          jq -e '.info.description | contains("mcp-name: io.github.usamahz/cpu-perf")' pypi.json
+      - name: Install mcp-publisher
+        run: |
+          curl -fsSL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
+          ./mcp-publisher --version
+      - name: Validate, sign in and publish
+        run: |
+          ./mcp-publisher validate misc/mcp/server.json
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish misc/mcp/server.json

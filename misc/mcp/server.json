@@ -1,0 +1,25 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.usamahz/cpu-perf",
+  "title": "CPU Performance Engineering",
+  "description": "A CPU performance engineering brain: a vetted reading list, benchmarks and cited source passages",
+  "repository": {
+    "url": "https://github.com/usamahz/cpu-performance-engineering",
+    "source": "github",
+    "subfolder": "misc/mcp"
+  },
+  "websiteUrl": "https://github.com/usamahz/cpu-performance-engineering/tree/main/misc/mcp",
+  "version": "0.1.1",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "cpu-perf",
+      "version": "0.1.1",
+      "runtimeHint": "uvx",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
