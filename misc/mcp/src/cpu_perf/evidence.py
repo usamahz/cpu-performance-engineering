@@ -28,7 +28,7 @@ MICROARCH = re.compile(
 )
 CORES = re.compile(
     r"\b((?:\d+|one|two|four|six|eight|ten|twelve|sixteen|thirty-two|sixty-four|single)[- ]?"
-    r"(?:p-|e-|performance |efficiency )?(?:cores?|threads?|vcpus?|hardware threads|sockets?|copies|processors?)|"
+    r"(?:pinned )?(?:p-|e-|performance |efficiency )?(?:cores?|threads?|vcpus?|hardware threads|sockets?|copies|processors?)|"
     r"single[- ]threaded|cores? used|taskset|numactl|\d+\s*t\b)",
     I,
 )
@@ -37,7 +37,7 @@ TURBO = re.compile(r"\b(turbo|boost|dvfs|governor|fixed (?:frequency|clock)|freq
 SMT = re.compile(r"\b(smt|hyper-?threading|ht (?:on|off)|siblings?|no smt|smt: none)\b", I)
 COMPILER = re.compile(
     r"\b(gcc|g\+\+|clang|llvm|icx|icpx|icc|msvc|rustc|go\s*1\.\d+|javac|openjdk|nvcc|xlc|armclang|aocc|"
-    r"apple clang|cl\.exe)\b(?:\s*(?:version\s*)?\d+(?:\.\d+)*)?",
+    r"apple clang|cl\.exe)(?=\b|\d)(?:\s*(?:version\s*)?\d+(?:\.\d+)*)?",
     I,
 )
 FLAGS = re.compile(
@@ -61,7 +61,8 @@ STATISTIC = re.compile(
     I,
 )
 RUNS = re.compile(
-    r"\b((?:\d+|three|five|seven|ten|eleven|twenty)\s*(?:timed\s+)?(?:runs?|repetitions?|reps|trials|iterations|samples|rounds|passes)|"
+    r"\b((?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|sixteen|twenty)\s*"
+    r"(?:timed\s+)?(?:(?:ABBA|A/A)\s+blocks?|runs?|repetitions?|reps|trials|iterations|samples|rounds|passes)|"
     r"perf stat|rdtsc|clock_gettime|clock_monotonic\w*|now_ns|hyperfine|google benchmark|criterion|"
     r"warm-?up|llama-bench|likwid)\b",
     I,
@@ -71,6 +72,39 @@ NUMBER = re.compile(
     r"cycles\b|ipc\b|tokens?/s|req/s|rps\b|qps\b|mpps\b|ops/s|fold\b)",
     I,
 )
+
+# A mention of an unknown state is not evidence that the state is known. Keep
+# this deliberately lexical: recognise explicit declarations, not arbitrary NLP.
+_CLOCK_SUBJECT = r"(?:frequency|clock|turbo|boost|dvfs|smt|hyper-?threading)(?:\s+states?)?"
+_CLOCK_SUBJECTS = rf"{_CLOCK_SUBJECT}(?:\s*(?:,\s*(?:and\s+)?|and\s+|/\s*){_CLOCK_SUBJECT})*"
+_UNCERTAIN = r"(?:unknown|unmeasured|unrecorded|unreported|unspecified|unavailable|not\s+(?:known|measured|recorded|reported|specified|available))"
+_UNCERTAIN_CLOCK = re.compile(
+    rf"\b(?P<after>{_CLOCK_SUBJECTS})(?:\s+(?:during the run|at runtime|for the run|is|was|were|are|remains?))*"
+    rf"\s*[:=]?\s*{_UNCERTAIN}\b|\b{_UNCERTAIN}\s+(?P<before>{_CLOCK_SUBJECTS})\b", I,
+)
+_NOMINAL_FREQ = re.compile(
+    r"\b(?:nominal|advertised)\s+(?:(?:frequency|clock)\s*[:=]?\s*)?"
+    r"\d+(?:\.\d+)?\s*(?:ghz|mhz)\b|"
+    r"\b\d+(?:\.\d+)?\s*(?:ghz|mhz)\s+(?:nominal|advertised)\b", I,
+)
+
+
+def _unknown_clock_fields(text: str) -> set[str]:
+    unknown: set[str] = set()
+    for match in _UNCERTAIN_CLOCK.finditer(text):
+        subjects = match.group("before") or match.group("after")
+        if re.search(r"\b(?:frequency|clock)\b", subjects, I):
+            unknown.add("frequency")
+        if TURBO.search(subjects):
+            unknown.add("turbo/DVFS state")
+        if SMT.search(subjects):
+            unknown.add("SMT state")
+    return unknown
+
+
+def _runtime_frequencies(text: str) -> list[str]:
+    return _find(FREQ, _NOMINAL_FREQ.sub(" ", text))
+
 
 FIELDS = (
     (1, "CPU model and microarchitecture", "Which CPU model, and which microarchitecture?"),
@@ -134,10 +168,21 @@ def audit(claim: str) -> EvidenceResult:
     cores = _find(CORES, text)
     add(2, "present" if cores else "missing", cores)
     freq, turbo, smt = _find(FREQ, text), _find(TURBO, text), _find(SMT, text)
-    have = [bool(freq), bool(turbo), bool(smt)]
-    missing_parts = [n for n, h in zip(("frequency", "turbo/DVFS state", "SMT state"), have) if not h]
-    add(3, "present" if all(have) else "partial" if any(have) else "missing", freq + turbo + smt,
-        ("missing " + ", ".join(missing_parts)) if missing_parts and any(have) else "")
+    unknown = _unknown_clock_fields(text)
+    runtime_freq = _runtime_frequencies(text)
+    names = ("frequency", "turbo/DVFS state", "SMT state")
+    have = [bool(values) and name not in unknown
+            for name, values in zip(names, (runtime_freq, turbo, smt))]
+    missing_parts = [name for name, present in zip(names, have) if not present]
+    notes = []
+    if missing_parts:
+        notes.append("missing or uncertain " + ", ".join(missing_parts))
+    if unknown:
+        notes.append("explicitly unknown/unmeasured: " + ", ".join(n for n in names if n in unknown))
+    if freq and not runtime_freq:
+        notes.append("nominal/advertised frequency only")
+    add(3, "present" if all(have) else "partial" if freq or turbo or smt else "missing",
+        freq + turbo + smt, "; ".join(notes))
     comp, flags = _find(COMPILER, text), _find(FLAGS, text)
     add(4, "present" if comp and flags else "partial" if comp or flags else "missing", comp + flags,
         "" if comp and flags else ("compiler without flags" if comp else "flags without compiler" if flags else ""))

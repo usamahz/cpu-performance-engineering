@@ -243,6 +243,13 @@ it would, so it does not consult `robots.txt` unless asked to with
 `--respect-robots` (`CPU_PERF_RESPECT_ROBOTS=1`); sources a site then
 disallows are reported as blocked.
 
+`check_evidence` is a lexical metadata check, not validation of a measurement.
+Explicitly unknown or unmeasured clock, turbo/DVFS and SMT states remain incomplete;
+a nominal or advertised clock alone is not a runtime frequency. Conflicting known
+and unknown declarations are treated conservatively. Arbitrary prose still needs
+human review. Its deterministic claim evals can be run with
+`python misc/mcp/tests/eval_evidence.py` from a source checkout.
+
 ## Tools
 
 | Tool | What it answers |

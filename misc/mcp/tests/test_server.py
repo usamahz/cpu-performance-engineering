@@ -17,6 +17,7 @@ from cpu_perf.net import Fetcher
 from cpu_perf.server import create_server
 
 from fixture_site import Site
+from eval_evidence import CASES as EVIDENCE_CASES
 
 TOOLS = {
     "ask", "lookup", "search", "fetch", "get_section", "get_entry", "reading_path", "get_benchmark", "editorial_record",
@@ -433,3 +434,15 @@ def test_out_of_range_arguments_get_a_clear_error(server):
     r = call(server, "lookup", {"query": "roofline", "limit": 500})
     assert r.is_error
     assert "limit" in r.content[0].text
+
+
+@pytest.mark.parametrize("ident,text,verdict,present,absent", EVIDENCE_CASES, ids=[c[0] for c in EVIDENCE_CASES])
+def test_evidence_eval_through_mcp(server, ident, text, verdict, present, absent):
+    result = call(server, "check_evidence", {"claim": text})
+    assert not result.is_error
+    data = result.structured_content
+    assert data["verdict"] == verdict
+    states = {f["number"]: f["status"] for f in data["fields"]}
+    assert all(states[n] == "present" for n in present)
+    assert all(states[n] != "present" for n in absent)
+    assert verdict in result.content[0].text
