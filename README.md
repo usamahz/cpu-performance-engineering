@@ -208,8 +208,8 @@ Line size and page size are machine parameters, not constants, so every padding 
 - [Measuring Cache and TLB Performance and Their Effect on Benchmark Run Times](https://www2.eecs.berkeley.edu/Pubs/TechRpts/1993/Archive/CSD-93-767.pdf) - The origin of the strided-loop method that recovers cache and TLB size, line size, associativity and miss cost.
 - [Achieving Non-Inclusive Cache Performance with Inclusive Caches](https://www.jaleels.org/ajaleel/publications/micro2010-tla.pdf) - Names inclusion victims as the cost of an inclusive last-level cache, the case for non-inclusive and victim designs.
 - [Adaptive Insertion Policies for High Performance Caching](https://dl.acm.org/doi/10.1145/1250662.1250709) - The origin of set duelling and bimodal insertion, the adaptive replacement that survives a streaming pass.
+- [High Performance Cache Replacement Using Re-Reference Interval Prediction (RRIP)](https://jaleels.org/ajaleel/publications/isca2010-rrip.pdf) - Establishes re-reference interval prediction for scan-resistant and thrash-resistant cache replacement.
 - [Lockup-Free Instruction Fetch/Prefetch Cache Organization](https://dl.acm.org/doi/10.1145/285930.285979) - Origin of the lockup-free cache, whose miss-status registers keep misses in flight, so a stream beats a chase.
-- [Dynamic Set Stealing to Improve Cache Performance](https://doi.org/10.1109/SBAC-PAD55451.2022.00017) - Introduces dynamic set stealing as a cache-management mechanism beyond insertion and replacement within a fixed set.
 
 Reproduce it: [misc/benchmarks/04-cache-latency](misc/benchmarks/04-cache-latency/README.md), dependent-load latency from L1 to DRAM, with and without TLB pressure.
 
