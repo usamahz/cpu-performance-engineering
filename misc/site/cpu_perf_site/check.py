@@ -325,6 +325,10 @@ def run_checks(site, dist: Path, strict: bool = False, quiet: bool = False) -> i
     robots = dist / "robots.txt"
     if not robots.is_file() or f"Sitemap: {site.absolute('/sitemap.xml')}" not in robots.read_text(encoding="utf-8").splitlines():
         problems.append("robots.txt does not advertise the canonical sitemap")
+    if key := site.config.site.get("indexnow_key"):
+        key_file = dist / f"{key}.txt"
+        if not key_file.is_file() or key_file.read_text(encoding="utf-8") != key:
+            problems.append("the IndexNow verification file is missing or does not match site.toml")
     report.check("search discovery", problems)
 
     # 5. internal links and fragments

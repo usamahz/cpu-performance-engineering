@@ -38,6 +38,7 @@ sitemap, the feeds and the Markdown twins.
 | `<page>.md`, `llms.txt`, `llms-full.txt` | Markdown twins of every page, for agents |
 | `corpus.json`, `schema/corpus-v1.json` | the parsed list, benchmarks and record as JSON |
 | `anchors.json` | every README heading anchor and the page that carries it |
+| `/<key>.txt` | public IndexNow verification key from `site.toml` |
 
 A link to `README.md#some-heading` keeps working: the page that carries the
 heading uses the same id, and `/#some-heading` redirects there.

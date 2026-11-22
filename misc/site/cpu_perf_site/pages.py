@@ -185,6 +185,6 @@ class Builder:
         for page in self.pages:
             self.render(page)
         agents.write_all(self.site, self.dist, self.pages)
-        seo.write_sitemap(self.site, self.dist, self.pages)
+        seo.write_discovery_files(self.site, self.dist, self.pages)
         images.write_all(self.site, self.dist)
         return self.pages

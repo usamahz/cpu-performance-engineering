@@ -9,6 +9,8 @@ mark = "CPE"
 repo = "https://github.com/usamahz/cpu-performance-engineering"
 lang = "en-GB"
 default_base_url = "http://localhost:8000"
+# Public verification key published at /<key>.txt for IndexNow.
+indexnow_key = "7089164d9e11b224cfb76f936b4d88b3"
 # The benchmark featured on the home page, beside its measurement passport.
 featured_benchmark = "04-cache-latency"
 
