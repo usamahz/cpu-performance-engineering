@@ -1,4 +1,4 @@
-"""Structured data, the sitemap and robots.txt."""
+"""Structured data, the sitemap and other search discovery files."""
 
 from __future__ import annotations
 
@@ -135,7 +135,7 @@ def lastmod_for(site, sources: list[str]) -> str | None:
     return max(stamps)[:10] if stamps else None
 
 
-def write_sitemap(site, dist: Path, pages) -> None:
+def write_discovery_files(site, dist: Path, pages) -> None:
     rows = []
     for p in pages:
         if p.noindex or not p.path.endswith("/"):
@@ -146,3 +146,5 @@ def write_sitemap(site, dist: Path, pages) -> None:
     (dist / "sitemap.xml").write_text(xml, encoding="utf-8")
     robots = f"User-agent: *\nAllow: /\n\nSitemap: {site.absolute('/sitemap.xml')}\n"
     (dist / "robots.txt").write_text(robots, encoding="utf-8")
+    if key := site.config.site.get("indexnow_key"):
+        (dist / f"{key}.txt").write_text(key, encoding="utf-8")
