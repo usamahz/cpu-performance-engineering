@@ -577,7 +577,7 @@ Reproduce it: [misc/benchmarks/13-sgemm-naive-vs-blas](misc/benchmarks/13-sgemm-
 - [oneDNN](https://github.com/uxlfoundation/oneDNN) - Generates VNNI and AMX kernels at run time under PyTorch, TensorFlow and OpenVINO, and calls Compute Library on Arm.
 - [ggml](https://github.com/ggml-org/ggml) - Defines the quantized block formats and the per-ISA dot-product kernels over them that every llama.cpp type rests on.
 - [llama.cpp](https://github.com/ggml-org/llama.cpp) - Where new quantization types, kernels and thread pools land first, each with the perplexity and speed table behind it.
-- [ONNX Runtime MLAS](https://github.com/microsoft/onnxruntime/tree/main/onnxruntime/core/mlas) - Holds the CPU provider's GEMM, int8 and int4 MatMul kernels, dispatched per ISA at run time from SSE to AMX and SME.
+- [KleidiAI compatibility in ONNX Runtime](https://onnxruntime.ai/docs/performance/kleidiai/) - Maps ONNX operators to the Arm micro-kernels integrated through MLAS, with the data types and instruction set extensions each kernel uses.
 - [OpenVINO CPU Device](https://docs.openvino.ai/2026/openvino-workflow/running-inference/inference-devices-and-modes/cpu-device.html) - States precision defaults per ISA, the int8 path through oneDNN and the streams model that turns cores into throughput.
 
 ### Quantization

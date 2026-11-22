@@ -18,7 +18,7 @@ A decode step at batch one reads every weight once for a few flops, so it runs a
 - [oneDNN](https://github.com/uxlfoundation/oneDNN) - Generates VNNI and AMX kernels at run time under PyTorch, TensorFlow and OpenVINO, and calls Compute Library on Arm.
 - [ggml](https://github.com/ggml-org/ggml) - Defines the quantized block formats and the per-ISA dot-product kernels over them that every llama.cpp type rests on.
 - [llama.cpp](https://github.com/ggml-org/llama.cpp) - Where new quantization types, kernels and thread pools land first, each with the perplexity and speed table behind it.
-- [ONNX Runtime MLAS](https://github.com/microsoft/onnxruntime/tree/main/onnxruntime/core/mlas) - Holds the CPU provider's GEMM, int8 and int4 MatMul kernels, dispatched per ISA at run time from SSE to AMX and SME.
+- [KleidiAI compatibility in ONNX Runtime](https://onnxruntime.ai/docs/performance/kleidiai/) - Maps ONNX operators to the Arm micro-kernels integrated through MLAS, with the data types and instruction set extensions each kernel uses.
 - [OpenVINO CPU Device](https://docs.openvino.ai/2026/openvino-workflow/running-inference/inference-devices-and-modes/cpu-device.html) - States precision defaults per ISA, the int8 path through oneDNN and the streams model that turns cores into throughput.
 
 ### Quantization
@@ -110,6 +110,8 @@ A decode step at batch one reads every weight once for a few flops, so it runs a
 - "1.42x reduction in end-to-end latency" and Table 1 "Dense: memory bound 100%, DRAM bound 87.5%" from https://arxiv.org/abs/2502.12444: fields present: 1 CPU Intel Xeon Gold 6430L (Sapphire Rapids), 2 cores swept in the scaling figure, not stated for the headline, 3 freq/turbo/SMT not stated, 4 compiler/flags not stated, PyTorch with custom kernels, 5 workload Llama 3 8B decode at 512 context, and 32 repeated linear layers of 4192 by 14336 for the VTune table, 6 baseline stock PyTorch, 7 method VTune pipeline-slot accounting for the table, run statistic not stated for the speedup. Missing: 2 (headline), 3, 4, 7 (speedup). Verdict: watchlist, the entry stays on the counter evidence and the released kernels, the speedup does not enter.
 
 ## Link notes
+
+- https://onnxruntime.ai/docs/performance/kleidiai/: page and compatibility data returned 200 on 2026-11-22. The original ONNX Runtime MLAS GitHub tree returned 404. The replacement documents the Arm integration.
 
 - http://justine.lol/matmul/: the https certificate expired on 2026-06-09 (notAfter Jun 9 2026, curl exit 60 when checked on 2026-09-15), so the http URL is used, which returns 200 with the page. Switch back to https once the certificate is renewed.
 - https://github.com/OpenMathLib/OpenBLAS: redirected (301) from https://github.com/xianyi/OpenBLAS.
