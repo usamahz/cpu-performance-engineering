@@ -24,20 +24,17 @@ def home_ld(site) -> list[dict]:
         {
             "@context": "https://schema.org",
             "@type": "WebSite",
+            "@id": site.absolute("/#website"),
             "name": name,
             "url": site.absolute("/"),
             "description": site.copy.home.description,
-            "potentialAction": {
-                "@type": "SearchAction",
-                "target": site.absolute("/search/?q={query}"),
-                "query-input": "required name=query",
-            },
         },
         {
             "@context": "https://schema.org",
             "@type": "Dataset",
+            "@id": site.absolute("/#corpus"),
             "name": f"{name}: the reading list as data",
-            "description": site.intro["lede"],
+            "description": site.copy.home.description,
             "url": site.absolute("/"),
             "license": "https://opensource.org/licenses/MIT",
             "isBasedOn": site.repo_url,
@@ -52,16 +49,17 @@ def home_ld(site) -> list[dict]:
     ]
 
 
-def section_ld(site, sec) -> list[dict]:
+def section_ld(site, sec, title: str, description: str) -> list[dict]:
     return [
         breadcrumb(site, [(site.copy.learn.title, "/learn/"), (f"{sec.number}. {sec.title}", sec.url)])
         if sec.kind != "watchlist" else breadcrumb(site, [(sec.title, sec.url)]),
         {
             "@context": "https://schema.org",
             "@type": "CollectionPage",
-            "name": f"{sec.number}. {sec.title}",
+            "name": title,
+            "description": description,
             "url": site.absolute(sec.url),
-            "isPartOf": site.absolute("/"),
+            "isPartOf": {"@id": site.absolute("/#website")},
             "mainEntity": {
                 "@type": "ItemList",
                 "numberOfItems": sec.entry_count,
@@ -69,6 +67,7 @@ def section_ld(site, sec) -> list[dict]:
                     {
                         "@type": "ListItem",
                         "position": i,
+                        "url": site.absolute(e.page),
                         "item": {
                             "@type": "CreativeWork",
                             "name": e.title,
@@ -118,7 +117,7 @@ def mcp_ld(site, path: str, label: str) -> list[dict]:
             "applicationCategory": "DeveloperApplication",
             "operatingSystem": "Linux, macOS, Windows",
             "softwareVersion": server.get("version") or site.generator.get("cpu_perf") or "",
-            "description": server.get("description") or site.copy.mcp.title,
+            "description": site.copy.mcp.overview_description,
             "url": site.absolute("/mcp/"),
             "codeRepository": f"{site.repo_url}/tree/main/misc/mcp",
             "license": "https://opensource.org/licenses/MIT",
@@ -133,7 +132,7 @@ def lastmod_for(site, sources: list[str]) -> str | None:
         for path, stamp in site.lastmod.items():
             if path == src or path.startswith(src.rstrip("/") + "/"):
                 stamps.append(stamp)
-    return max(stamps)[:10] if stamps else (site.source.get("committed_at") or "")[:10] or None
+    return max(stamps)[:10] if stamps else None
 
 
 def write_sitemap(site, dist: Path, pages) -> None:

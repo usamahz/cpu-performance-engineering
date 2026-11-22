@@ -4,6 +4,8 @@ llms-full.txt, corpus.json with its schema, search.json and anchors.json."""
 from __future__ import annotations
 
 import json
+import re
+from html import unescape
 from pathlib import Path
 
 SCHEMA_ID = "cpu-perf-site-corpus"
@@ -61,17 +63,23 @@ def record_twin(site) -> str:
 
 
 def strip_html(html: str) -> str:
-    import re
-    return re.sub(r"<[^>]+>", "", html).replace("&quot;", '"').replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">").replace("&#x27;", "'")
+    return unescape(re.sub(r"<[^>]+>", "", html))
 
 
 def learn_twin(site) -> str:
-    out = [front_matter(site, site.copy.learn.heading, "/learn/"), f"# {site.copy.learn.heading}", ""]
+    learn = site.copy.learn
+    out = [front_matter(site, learn.heading, "/learn/"), f"# {learn.heading}", "", learn.description, ""]
     for g in site.groups:
         out += [f"## {g.name}", "", g.blurb, ""]
         for s in g.sections:
             out.append(f"- [{s.number}. {s.title}]({site.absolute(s.twin)})" + (f": {strip_html(s.preamble_html)}" if s.preamble else ""))
         out.append("")
+    out += [f"## {learn.questions_heading}", ""]
+    for q in learn.questions:
+        b = site.bench_by_slug[q["benchmark"]]
+        out += [f"### {q['title']}", "", q["text"], "",
+                f"- [{q['read']}]({site.absolute(q['href'])})",
+                f"- [{b.title}]({site.absolute(b.url)})", ""]
     return "\n".join(out)
 
 
@@ -83,29 +91,42 @@ def home_twin(site) -> str:
     return front_matter(site, site.config.site["name"], "/", site.links.blob("README.md")) + site.md.absolutise(body, "README.md", site.base_url)
 
 
-def llms_txt(site) -> str:
+def llms_txt(site, pages) -> str:
     name = site.config.site["name"]
-    lede = site.intro["lede"]
-    out = [f"# {name}", "", f"> {lede}", ""]
-    out.append(f"{site.counts['sections']} sections, {site.counts['entries']} primary sources, "
-               f"{site.counts['benchmarks']} benchmarks with committed results, and the editorial record of "
-               f"{site.counts['rejected']} candidates left out. Every page has a Markdown twin at the same path with .md.")
-    out += ["", "## Sections", ""]
+    pages = {p.path: p for p in pages}
+    out = [f"# {name}", "", f"> {site.copy.home.description}", "",
+           f"{site.counts['sections']} sections, {site.counts['entries']} primary-source entries and "
+           f"{site.counts['benchmarks']} runnable C benchmarks with committed results.",
+           "",
+           "Cite the HTML page for the reading list or a benchmark. Cite the linked paper, manual or specification "
+           "for a source claim. Benchmark pages state what was measured, on which machine, and where the result applies. "
+           "Markdown copies include the canonical HTML URL and the source commit."]
+
+    def add(path: str, label: str) -> None:
+        page = pages[path]
+        out.append(f"- [{label}]({site.absolute(path)}): {page.description.rstrip('.')}."
+                   f" [Markdown]({site.absolute(page.twin)})")
+
+    out += ["", "## Start here", ""]
+    add("/learn/", site.copy.learn.search_title)
+    add("/benchmarks/", site.copy.benchmarks.search_title)
+    add("/evidence/", site.copy.evidence.search_title)
+    out += ["", "## Reading list", ""]
     for s in site.sections:
-        desc = strip_html(s.preamble_html) if s.preamble else s.title
-        out.append(f"- [{s.number}. {s.title}]({site.absolute(s.twin)}): {desc}")
+        add(s.url, f"{s.number}. {pages[s.url].title}")
     out += ["", "## Benchmarks", ""]
     for b in site.benchmarks:
-        out.append(f"- [{b.title}]({site.absolute(b.twin)}): {b.index_claim}")
+        add(b.url, site.copy.benchmark_search.get(b.slug, b.title))
     out += ["", "## MCP server", ""]
-    first = next((p for p in site.mcp.intro_md.split("\n\n") if p.strip()), "")
-    out.append(f"- [cpu-perf]({site.absolute('/mcp.md')}): {' '.join(first.split())}")
+    add("/mcp/", site.copy.mcp.search_title)
+    for path in ("/mcp/quickstart/", "/mcp/tools/", "/mcp/resources/", "/mcp/workflows/", "/mcp/security/"):
+        add(path, pages[path].title)
     out += ["", "## Data", ""]
-    out.append(f"- [corpus.json]({site.absolute('/corpus.json')}): the parsed list, benchmarks and editorial record as JSON, schema at {site.absolute('/schema/corpus-v1.json')}")
+    out.append(f"- [corpus.json]({site.absolute('/corpus.json')}): The parsed reading list, benchmark results and editorial record. "
+               f"[JSON Schema]({site.absolute('/schema/corpus-v1.json')})")
     out += ["", "## Optional", ""]
-    out.append(f"- [The whole list]({site.absolute('/learn/all.md')}): every section on one page")
-    out.append(f"- [Evidence rules]({site.absolute('/evidence.md')}): what earns a place, and the contributing rules")
-    out.append(f"- [Editorial record]({site.absolute('/evidence/record.md')}): what was left out, and why")
+    add("/evidence/record/", site.copy.record.title)
+    out.append(f"- [llms-full.txt]({site.absolute('/llms-full.txt')}): The complete reading entries, benchmark reports, evidence rules and MCP overview.")
     return "\n".join(out) + "\n"
 
 
@@ -238,13 +259,15 @@ def mcp_twins(site) -> dict[str, str]:
 
 def write_all(site, dist: Path, pages) -> None:
     write(dist, "/index.md", home_twin(site))
-    write(dist, "/learn.md", learn_twin(site))
+    learn_md = learn_twin(site)
+    write(dist, "/learn.md", learn_md)
     all_md = [front_matter(site, site.copy.all.title, "/learn/all/", site.links.blob("README.md"))]
     for s in site.sections:
         all_md.append(section_twin(site, s).split("---\n", 2)[-1])
         write(dist, s.twin, section_twin(site, s))
     write(dist, "/learn/all.md", "\n".join(all_md))
-    full = [llms_txt(site)]
+    index = llms_txt(site, pages)
+    full = [index, learn_md]
     for s in site.sections:
         full.append(section_twin(site, s))
     for b in site.benchmarks:
@@ -275,7 +298,7 @@ def write_all(site, dist: Path, pages) -> None:
         bench_index = site.md.absolutise(site.files.get("misc/benchmarks/README.md", ""), "misc/benchmarks/README.md", site.base_url)
         write(dist, "/benchmarks.md", front_matter(site, site.copy.benchmarks.title, "/benchmarks/",
                                                    site.links.blob("misc/benchmarks/README.md")) + bench_index)
-    write(dist, "/llms.txt", llms_txt(site))
+    write(dist, "/llms.txt", index)
     write(dist, "/llms-full.txt", "\n\n".join(full))
     write(dist, "/corpus.json", json.dumps(corpus_json(site), ensure_ascii=False, separators=(",", ":")) + "\n")
     write(dist, "/schema/corpus-v1.json", json.dumps(corpus_schema(), indent=1) + "\n")

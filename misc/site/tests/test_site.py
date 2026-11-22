@@ -298,6 +298,25 @@ class Built(unittest.TestCase):
         self.assertIn("twins and data files", self.seeded(
             "drift", lambda d: (d / twin).write_text((d / twin).read_text(encoding="utf-8") + "\n- an extra line\n", encoding="utf-8")))
 
+    def test_markdown_names_wrong_canonical(self):
+        self.assertIn("twins and data files", self.seeded(
+            "twin-canonical", lambda d: self.edit(d / "learn.md", "url: http://localhost:8000/learn/",
+                                                 "url: http://localhost:8000/")))
+
+    def test_same_origin_wrong_canonical(self):
+        self.assertIn("search discovery", self.seeded(
+            "canonical", lambda d: self.edit(d / "learn" / "index.html",
+                                             'rel="canonical" href="http://localhost:8000/learn/"',
+                                             'rel="canonical" href="http://localhost:8000/"')))
+
+    def test_page_missing_from_sitemap(self):
+        def drop(d):
+            sitemap = d / "sitemap.xml"
+            lines = sitemap.read_text(encoding="utf-8").splitlines(keepends=True)
+            sitemap.write_text("".join(line for line in lines if "/learn/</loc>" not in line), encoding="utf-8")
+
+        self.assertIn("search discovery", self.seeded("sitemap", drop))
+
     def test_record_item_missing(self):
         site = load_site(self.build, load_config())
         rid = site.claims[0].id
