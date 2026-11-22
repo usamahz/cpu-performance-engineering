@@ -32,10 +32,10 @@ copy_prompt = "Copy prompt"
 noscript_note = "Filters, search and progress need JavaScript; every list on this page is complete without it."
 
 [home]
-title = "CPU Performance Engineering"
-description = "A reading path for CPU performance engineering, from one instruction to production inference. Primary sources only, with a runnable benchmark for every section, and an MCP server that brings the list into any AI client."
+title = "CPU Performance Engineering · Reading List and Benchmarks"
+description = "Learn CPU performance engineering from primary sources on x86 and Arm, with runnable C benchmarks, committed results and a local MCP server."
 eyebrow = "Understand every cycle · Prove every speedup"
-heading = "A CPU performance engineering brain for any codebase."
+heading = "CPU performance engineering, from source to measurement"
 cta_connect = "Connect the server"
 cta_learn = "Start learning"
 cta_bench = "Explore benchmarks →"
@@ -106,13 +106,111 @@ name = "Watchlist"
 blurb = "Dated, for things whose evidence is still moving."
 
 [learn]
-title = "Learn"
+title = "Reading path"
+search_title = "CPU Performance Engineering Reading List"
+description = "An ordered reading path through CPU architecture, Linux perf, caches, SIMD, compilers, NUMA, tail latency and CPU inference, with C benchmarks."
 eyebrow = "Reading path"
-heading = "From one instruction to a model served on CPU."
+heading = "CPU performance engineering reading list"
 sources = "sources"
 parts = "parts"
 benchmark = "benchmark"
 all_link = "The whole list on one page →"
+questions_heading = "CPU performance questions to start with"
+
+[[learn.questions]]
+title = "How do I profile CPU performance on Linux?"
+text = "Start with perf stat for event counts. Check that cycles are available on the machine, then use perf record to sample and perf annotate to inspect hot instructions. The profiling chapter links to the perf maintainers’ walkthrough."
+read = "Linux perf profiling and flame graphs"
+href = "/learn/measurement/#cpu-profilers-and-flame-graphs"
+benchmark = "05-measurement-pitfalls"
+
+[[learn.questions]]
+title = "How do I measure CPU cache and TLB latency?"
+text = "Use a pointer chase so each load depends on the previous one. Sweep the working-set size and compare random visits to cache lines with random visits across pages."
+read = "Caches, TLBs and page walks"
+href = "/learn/memory-hierarchy/#tlbs-page-walks-and-prefetchers"
+benchmark = "04-cache-latency"
+
+[[learn.questions]]
+title = "Why did the compiler skip vectorising a loop?"
+text = "Check the vectoriser’s remarks and read the emitted assembly. The aliasing benchmark compares the same loop with and without restrict, which lets the compiler assume its pointers do not alias in that access pattern."
+read = "Target flags and auto-vectorisation"
+href = "/learn/compilers-and-codegen/#target-flags-and-auto-vectorisation"
+benchmark = "08-autovectorization-aliasing"
+
+[[learn.questions]]
+title = "How can a load test understate tail latency?"
+text = "A closed-loop client waits for each response before issuing another request. When the server stalls, the client sends fewer requests, so the latency distribution omits some of the waiting that a fixed arrival schedule would expose."
+read = "Tail latency measurement"
+href = "/learn/tail-latency-and-production-systems/#measuring-the-tail"
+benchmark = "12-coordinated-omission"
+
+# Chapter titles and summaries describe the existing README sections. The
+# README headings still define the public URLs and anchors.
+[chapter_search.start-here]
+title = "How to Learn CPU Performance Engineering"
+description = "Start with ten readings on CPU pipelines, caches, memory barriers, profiling and performance models. Apply them with a cache-latency benchmark."
+[chapter_search.one-instruction-end-to-end]
+title = "How a CPU Executes an Instruction"
+description = "Follow an instruction through fetch, decode, register rename, issue, execution and retirement. Reproduce the cost of branch misprediction."
+[chapter_search.microarchitecture]
+title = "CPU Microarchitecture, Branch Prediction and SMT"
+description = "Read original work on instruction-level parallelism, SMT, branch predictors and CPU instruction latency and throughput."
+[chapter_search.memory-hierarchy]
+title = "CPU Memory Hierarchy, Caches and TLBs"
+description = "Primary sources on CPU cache misses, TLBs, page walks, prefetching and memory ordering, with a pointer-chasing benchmark."
+[chapter_search.measurement]
+title = "CPU Profiling with Linux perf and Hardware Counters"
+description = "Find primary sources for Linux perf, PMU events, sampling, flame graphs and microbenchmark pitfalls."
+[chapter_search.models]
+title = "CPU Performance Models: Roofline and Top-Down Analysis"
+description = "Use Roofline, execution-cache-memory, top-down analysis, scaling laws and queueing to reason about CPU bottlenecks."
+[chapter_search.single-thread-optimisation]
+title = "Single-Thread CPU Optimisation and SIMD"
+description = "Primary sources on data layout, loop transforms, SIMD and branchless code, with an array-of-structs versus structure-of-arrays benchmark."
+[chapter_search.compilers-and-codegen]
+title = "Compiler Optimisation, Code Generation and Vectorisation"
+description = "Read emitted assembly and trace compiler decisions about target flags, auto-vectorisation, inlining, link-time and profile-guided optimisation."
+[chapter_search.concurrency]
+title = "CPU Concurrency, Atomics and False Sharing"
+description = "Read primary sources on memory models, atomics, locks, allocators and work stealing. Measure the cost of false sharing with a C benchmark."
+[chapter_search.numa-and-multi-socket]
+title = "NUMA Performance and Linux Memory Placement"
+description = "Study first-touch placement, NUMA policies, topology and page migration, with a benchmark that separates allocation from first touch."
+[chapter_search.os-and-io]
+title = "CPU Costs of Syscalls, Scheduling and I/O"
+description = "Explore Linux syscalls, asynchronous I/O, CPU affinity, interrupts, kernel bypass and resource partitioning. Reproduce the cost of a syscall."
+[chapter_search.tail-latency-and-production-systems]
+title = "Tail Latency and Coordinated Omission"
+description = "Primary sources on latency percentiles, jitter and load generation, with a benchmark comparing closed-loop and open-loop measurement."
+[chapter_search.inference-on-cpu]
+title = "CPU Inference Performance, GEMM and Quantization"
+description = "Study CPU inference through BLAS, inference runtimes, quantization, matrix instructions and threading. Compare SGEMM implementations in C."
+[chapter_search.hardware-generations]
+title = "Server CPU Architecture: Xeon, EPYC and Arm Neoverse"
+description = "Compare primary sources on Intel Xeon, AMD EPYC and Arm Neoverse. Measure the same code on performance and efficiency cores."
+[chapter_search.benchmarks]
+title = "CPU Benchmark Suites: SPEC CPU, STREAM and More"
+description = "Find CPU benchmark suites, official run rules and methodology for interpreting scores. Reproduce memory bandwidth measurements in C."
+[chapter_search.watchlist]
+title = "Server CPU and ISA Watchlist"
+description = "Track CPU and ISA developments awaiting a specification, shipping hardware or a published, reproducible measurement."
+
+[benchmark_search]
+02-branch-misprediction = "Branch Misprediction Cost"
+03-latency-vs-throughput = "CPU Instruction Latency vs Throughput"
+04-cache-latency = "CPU Cache and TLB Latency with Pointer Chasing"
+05-measurement-pitfalls = "CPU Microbenchmark Pitfalls"
+06-roofline = "Roofline Model for CPU Performance"
+07-aos-vs-soa-simd = "AoS vs SoA for SIMD"
+08-autovectorization-aliasing = "Compiler Auto-vectorisation and Pointer Aliasing"
+09-false-sharing = "False Sharing and Cache-Line Padding"
+10-first-touch = "First-Touch Memory Placement"
+11-syscall-cost = "Syscall Overhead by Request Size"
+12-coordinated-omission = "Coordinated Omission in Latency Measurements"
+13-sgemm-naive-vs-blas = "SGEMM Performance: Naive C, Microkernel and BLAS"
+14-pcore-vs-ecore = "Performance Cores vs Efficiency Cores"
+15-stream-bandwidth = "STREAM Memory Bandwidth by Thread Count"
 
 [chapter]
 breadcrumb = "Learn"
@@ -154,8 +252,10 @@ lede = "Every section and entry on one page, in README order, for searching with
 
 [benchmarks]
 title = "Benchmark lab"
+search_title = "Reproducible CPU Benchmarks in C"
+description = "Run CPU microbenchmarks for cache latency, branch prediction, SIMD, false sharing and memory bandwidth. Each includes C source, method and raw data."
 eyebrow = "Benchmark lab"
-heading = "One reproducible measurement per section."
+heading = "Reproducible CPU benchmarks in C"
 search = "Search"
 search_placeholder = "cache, SIMD, tail…"
 group = "Reading group"
@@ -198,6 +298,8 @@ server_link = "The reproduce_benchmark prompt →"
 
 [evidence]
 title = "Evidence rules"
+search_title = "CPU Benchmark Methodology and Evidence Rules"
+description = "The seven fields required for a reported CPU benchmark result, from processor and compiler details to the workload, baseline and measurement method."
 eyebrow = "Evidence"
 heading = "Seven fields, and a number without all of them does not appear."
 seven = "The seven required fields"
@@ -264,6 +366,14 @@ none = "No verdict"
 
 [mcp]
 title = "MCP server"
+search_title = "cpu-perf · CPU Performance Engineering MCP Server"
+overview_description = "Look up CPU performance sources, benchmarks and evidence from an AI client with cpu-perf, an MCP server that builds its source index locally."
+quickstart_description = "Install the cpu-perf MCP server with uvx and connect it to Claude Code, Codex, Cursor or VS Code. See client configuration and first-run indexing."
+quickstart_search_title = "Install and Configure"
+tools_description = "Reference for the cpu-perf MCP tools that search primary sources, interpret performance output, check evidence and retrieve benchmark data."
+resources_description = "Find the cpu-perf MCP resource URIs and templates for reading sections, source entries, benchmarks and the editorial record."
+workflows_description = "Use cpu-perf MCP prompts to interpret profiling output, test a CPU performance claim or reproduce a committed benchmark."
+security_description = "See how the cpu-perf MCP server fetches sources, builds its local index and handles files and network access."
 eyebrow = "MCP · cpu-perf"
 nav_overview = "Overview"
 nav_quickstart = "Quickstart"
@@ -277,7 +387,7 @@ layers_label = "What the server knows"
 cases_eyebrow = "Questions"
 cases_heading = "What to ask it"
 cases_note = "The example questions in the server's README, with the first results the server's own search tool returns for each at this commit."
-heading = "The whole list, as something an AI client can search and reason over."
+heading = "cpu-perf MCP server"
 copy_question = "Copy question"
 install_claude = "Add it to Claude Code"
 install_codex = "Add it to Codex"

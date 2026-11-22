@@ -52,7 +52,10 @@ on any of these, naming the page:
 - a README heading whose anchor is not where `anchors.json` says;
 - a count that disagrees with an independent markdown-it walk of the README;
 - a Markdown twin that is not the README's own lines, or a data file or
-  sitemap entry that points at nothing;
+  agent index link that points at nothing;
+- a Markdown twin with the wrong canonical URL, or an HTML page with
+  incorrect indexing directives, missing search metadata or an incorrect
+  sitemap entry;
 - an internal link or fragment that does not resolve;
 - a benchmark whose passport lacks a field, whose chart draws a different
   number of marks from its data table, or whose README results differ from
@@ -84,7 +87,8 @@ matches nothing, a unit that disagrees with its axis, a key repeated across
 ## Layout
 
 - `site.toml`: navigation, the reading-path groups, reserved slugs, budgets.
-- `copy.toml`: every string the site writes itself.
+- `copy.toml`: the site's own copy, including the chapter search metadata
+  and the performance questions shared by the reading path and its Markdown twin.
 - `charts.toml`: one or more chart specs per benchmark.
 - `cpu_perf_site/`: the generator (`data.py` view models, `pages.py`,
   `charts/` for the SVG charts, `agents.py` for the twins and data files,

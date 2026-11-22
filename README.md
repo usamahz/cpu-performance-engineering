@@ -4,10 +4,11 @@
 
 [![Links](https://github.com/usamahz/cpu-performance-engineering/actions/workflows/links.yml/badge.svg)](https://github.com/usamahz/cpu-performance-engineering/actions/workflows/links.yml) [![Quality](https://github.com/usamahz/cpu-performance-engineering/actions/workflows/quality.yml/badge.svg)](https://github.com/usamahz/cpu-performance-engineering/actions/workflows/quality.yml) [![Entries](https://img.shields.io/badge/entries-304-1f6feb)](#contents) [![Benchmarks](https://img.shields.io/badge/benchmarks-14%20runnable-1f6feb)](misc/benchmarks/README.md) [![MCP](https://img.shields.io/badge/MCP-server-1f6feb)](misc/mcp/README.md) [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE) [![Stars](https://img.shields.io/github/stars/usamahz/cpu-performance-engineering?style=flat&color=555)](https://github.com/usamahz/cpu-performance-engineering/stargazers)
 
-Making a program fast on a modern CPU means knowing what the core does with
-each instruction, where the time actually goes, and how to prove a change
-helped. This is the reading that gets you there, in the order that makes the
-next piece legible.
+CPU performance engineering measures where a program spends time on the CPU
+and tests which changes improve it. The
+[reading path at cpuperf.com](https://cpuperf.com/learn/) orders primary
+sources from CPU microarchitecture and caches through Linux perf profiling,
+SIMD, NUMA, tail latency and inference on CPU.
 
 **Scope.** x86 and Arm server parts, from one instruction through to serving
 a model on CPU. Not language runtimes, database internals, or anything above
@@ -44,7 +45,7 @@ codex mcp add cpu-perf -- uvx cpu-perf
 Claude Desktop, Cursor and VS Code take a few lines of config, given in
 [Connect it](misc/mcp/README.md#connect-it).
 
-Section 1 is a path through the rest; read it top to bottom before using the
+Start with [the first ten readings](#1-start-here), then use the
 numbered sections as a reference.
 
 ## Contents
@@ -576,7 +577,7 @@ Reproduce it: [misc/benchmarks/13-sgemm-naive-vs-blas](misc/benchmarks/13-sgemm-
 - [oneDNN](https://github.com/uxlfoundation/oneDNN) - Generates VNNI and AMX kernels at run time under PyTorch, TensorFlow and OpenVINO, and calls Compute Library on Arm.
 - [ggml](https://github.com/ggml-org/ggml) - Defines the quantized block formats and the per-ISA dot-product kernels over them that every llama.cpp type rests on.
 - [llama.cpp](https://github.com/ggml-org/llama.cpp) - Where new quantization types, kernels and thread pools land first, each with the perplexity and speed table behind it.
-- [ONNX Runtime MLAS](https://github.com/microsoft/onnxruntime/tree/main/onnxruntime/core/mlas) - Holds the CPU provider's GEMM, int8 and int4 MatMul kernels, dispatched per ISA at run time from SSE to AMX and SME.
+- [KleidiAI compatibility in ONNX Runtime](https://onnxruntime.ai/docs/performance/kleidiai/) - Maps ONNX operators to the Arm micro-kernels integrated through MLAS, with the data types and instruction set extensions each kernel uses.
 - [OpenVINO CPU Device](https://docs.openvino.ai/2026/openvino-workflow/running-inference/inference-devices-and-modes/cpu-device.html) - States precision defaults per ISA, the int8 path through oneDNN and the streams model that turns cores into throughput.
 
 ### Quantization

@@ -9,18 +9,20 @@
 <meta name="description" content="{{ page.description }}">
 <link rel="canonical" href="{{ site.absolute(page.path) }}">
 {% if page.noindex %}<meta name="robots" content="noindex">
+{% else %}<meta name="robots" content="max-image-preview:large">
 {% endif %}
-{% if page.twin %}<link rel="alternate" type="text/markdown" href="{{ page.twin }}" title="Markdown">
+{% if page.twin %}<link rel="alternate" type="text/markdown" href="{{ site.absolute(page.twin) }}" title="Markdown">
 {% endif %}
 <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="{{ config.site.name }}">
-<meta property="og:title" content="{{ page.og_title or page.title }}">
+<meta property="og:title" content="{{ page.title }}">
 <meta property="og:description" content="{{ page.description }}">
 <meta property="og:url" content="{{ site.absolute(page.path) }}">
 <meta property="og:image" content="{{ site.absolute('/og.jpg') }}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{{ copy.global.credit_banner }}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#f7f4ee" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1d1a17" media="(prefers-color-scheme: dark)">

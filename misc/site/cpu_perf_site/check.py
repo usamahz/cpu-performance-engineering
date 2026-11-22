@@ -13,6 +13,7 @@ from __future__ import annotations
 import gzip
 import json
 import re
+from collections import Counter
 from dataclasses import dataclass, field
 from html.parser import HTMLParser
 from pathlib import Path
@@ -35,7 +36,9 @@ class PageInfo:
     styles: int = 0  # style attributes
     csp: str = ""
     twin: str = ""
-    canonical: str = ""
+    canonicals: list[str] = field(default_factory=list)
+    title: str = ""
+    meta: dict[str, str] = field(default_factory=dict)
     html: str = ""
 
 
@@ -43,10 +46,16 @@ class Collector(HTMLParser):
     def __init__(self, info: PageInfo):
         super().__init__(convert_charrefs=True)
         self.info = info
+        self.in_head = False
+        self.in_title = False
 
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
         i = self.info
+        if tag == "head":
+            self.in_head = True
+        if tag == "title" and self.in_head:
+            self.in_title = True
         if "id" in a:
             i.ids.add(a["id"])
         if "style" in a:
@@ -61,12 +70,26 @@ class Collector(HTMLParser):
             rel = (a.get("rel") or "").split()
             if {"stylesheet", "icon", "preload", "modulepreload"} & set(rel):
                 i.sources.append(a.get("href", ""))
-            if "alternate" in rel and a.get("type") == "text/markdown":
+            if self.in_head and "alternate" in rel and a.get("type") == "text/markdown":
                 i.twin = a.get("href", "")
-            if "canonical" in rel:
-                i.canonical = a.get("href", "")
-        if tag == "meta" and (a.get("http-equiv") or "").lower() == "content-security-policy":
-            i.csp = a.get("content", "")
+            if self.in_head and "canonical" in rel:
+                i.canonicals.append(a.get("href", ""))
+        if tag == "meta" and self.in_head:
+            if (a.get("http-equiv") or "").lower() == "content-security-policy":
+                i.csp = a.get("content", "")
+            name = a.get("name") or a.get("property")
+            if name:
+                i.meta[name] = a.get("content", "")
+
+    def handle_endtag(self, tag):
+        if tag == "head":
+            self.in_head = False
+        if tag == "title":
+            self.in_title = False
+
+    def handle_data(self, data):
+        if self.in_title:
+            self.info.title += data
 
 
 def parse(dist: Path, file: Path) -> PageInfo:
@@ -165,7 +188,7 @@ class Report:
 def run_checks(site, dist: Path, strict: bool = False, quiet: bool = False) -> int:
     from .pages import Builder
 
-    Builder(site, dist)  # the same derived views the build used (MCP surface, charts)
+    builder = Builder(site, dist)  # the same derived views the build used (MCP surface, charts)
     report = Report()
     files = sorted(dist.rglob("*.html"))
     pages = {p.path: p for p in (parse(dist, f) for f in files)}
@@ -224,11 +247,19 @@ def run_checks(site, dist: Path, strict: bool = False, quiet: bool = False) -> i
                 for k, v in rc.items() if counts.get(k) != v]
     report.check("independent recount", problems)
 
-    # 4. twins, corpus.json, llms.txt, sitemap
+    # 4. twins, corpus.json, llms.txt
     problems = []
-    for path, page in pages.items():
-        if page.twin and not target(dist, page.twin):
-            problems.append(f"{path} names twin {page.twin}, which was not written")
+    plan = {p.path: p for p in builder.plan()}
+    for path, planned in plan.items():
+        if not planned.twin or path not in pages:
+            continue
+        twin = target(dist, planned.twin)
+        if pages[path].twin != site.absolute(planned.twin) or twin is None:
+            problems.append(f"{path} does not point to its Markdown twin at {planned.twin}")
+            continue
+        header = twin.read_text(encoding="utf-8").split("---\n", 2)
+        if len(header) != 3 or f"url: {site.absolute(path)}" not in header[1].splitlines():
+            problems.append(f"{planned.twin} does not name its canonical page {path}")
     for sec in site.sections:
         twin = (dist / sec.twin.lstrip("/")).read_text(encoding="utf-8") if (dist / sec.twin.lstrip("/")).is_file() else ""
         body = twin.split("---\n", 2)[-1]
@@ -248,19 +279,53 @@ def run_checks(site, dist: Path, strict: bool = False, quiet: bool = False) -> i
     for url in re.findall(r"\]\((\S+?)\)", llms):
         if url.startswith(site.base_url) and not target(dist, urlsplit(url).path):
             problems.append(f"llms.txt links {url}, which was not written")
+    report.check("twins and data files", problems)
+
+    # Canonical URLs, indexability and search previews.
+    problems = []
+    indexable = {site.absolute(p.path) for p in plan.values() if not p.noindex}
+    titles: dict[str, str] = {}
+    descriptions: dict[str, str] = {}
+    for path, planned in plan.items():
+        page = pages.get(path)
+        if page is None:
+            problems.append(f"{path} was not built")
+            continue
+        canonical = site.absolute(path)
+        if page.canonicals != [canonical]:
+            problems.append(f"{path} must have one canonical link to {canonical}")
+        directives = {value.strip().lower() for value in page.meta.get("robots", "").split(",")}
+        if ("noindex" in directives) != planned.noindex:
+            problems.append(f"{path} has unexpected robots directives")
+        if planned.noindex:
+            continue
+        title = page.title.strip()
+        description = page.meta.get("description", "").strip()
+        for label, value, seen in (("title", title, titles), ("description", description, descriptions)):
+            if not value:
+                problems.append(f"{path} is missing its {label}")
+            elif value in seen:
+                problems.append(f"{path} shares its {label} with {seen[value]}")
+            seen[value] = path
+        if page.meta.get("og:url") != canonical:
+            problems.append(f"{path} shares a URL different from its canonical URL")
+        image = page.meta.get("og:image", "")
+        if image != site.absolute("/og.jpg") or not target(dist, "/og.jpg"):
+            problems.append(f"{path} is missing its social preview image")
     try:
         tree = ElementTree.parse(dist / "sitemap.xml")
-        locs = [e.text for e in tree.iter("{http://www.sitemaps.org/schemas/sitemap/0.9}loc")]
-        for loc in locs:
-            if not loc.startswith(site.base_url) or not target(dist, urlsplit(loc).path):
-                problems.append(f"sitemap.xml lists {loc}, which this build does not serve")
-        noindex = [p for p, info in pages.items() if 'name="robots" content="noindex"' in info.html]
-        for p in noindex:
-            if site.absolute(p) in locs:
-                problems.append(f"sitemap.xml lists {p}, which is noindex")
-    except ElementTree.ParseError as exc:
+        locs = Counter(e.text for e in tree.iter("{http://www.sitemaps.org/schemas/sitemap/0.9}loc"))
+        for loc in sorted(indexable - locs.keys()):
+            problems.append(f"sitemap.xml is missing {loc}")
+        for loc, count in locs.items():
+            if loc not in indexable or count != 1:
+                problems.append(f"sitemap.xml has {count} entries for {loc}, expected {int(loc in indexable)}")
+    except (OSError, ElementTree.ParseError) as exc:
         problems.append(f"sitemap.xml does not parse: {exc}")
-    report.check("twins and data files", problems)
+    robots = dist / "robots.txt"
+    if not robots.is_file() or f"Sitemap: {site.absolute('/sitemap.xml')}" not in robots.read_text(encoding="utf-8").splitlines():
+        problems.append("robots.txt does not advertise the canonical sitemap")
+    report.check("search discovery", problems)
 
     # 5. internal links and fragments
     problems = []
@@ -368,8 +433,6 @@ def run_checks(site, dist: Path, strict: bool = False, quiet: bool = False) -> i
         for src in page.sources:
             if urlsplit(src).scheme or src.startswith("//"):
                 problems.append(f"{path} loads {src} from another origin")
-        if page.canonical and not page.canonical.startswith(site.base_url):
-            problems.append(f"{path} has canonical {page.canonical}, outside {site.base_url}")
     budgets = cfg.budgets
     for sec in site.chapters:
         f = target(dist, sec.url)

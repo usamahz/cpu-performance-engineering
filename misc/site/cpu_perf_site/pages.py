@@ -30,7 +30,6 @@ class Page:
     nav: str = ""
     twin: str | None = None
     noindex: bool = False
-    og_title: str | None = None
     json_ld: list = field(default_factory=list)
     sources: list[str] = field(default_factory=list)  # repository files, for the sitemap's lastmod
     context: dict = field(default_factory=dict)
@@ -85,23 +84,20 @@ class Builder:
         pages = [
             Page("/", "home.html", c.home.title, desc_home, twin="/index.md",
                  json_ld=seo.home_ld(s), sources=["README.md", "misc/mcp/README.md"]),
-            Page("/learn/", "learn_index.html", f"{c.learn.title} · {s.config.site['name']}",
-                 " ".join(s.intro["lede"].split()[:40]), nav="/learn/", twin="/learn.md",
+            Page("/learn/", "learn_index.html", c.learn.search_title, c.learn.description, nav="/learn/", twin="/learn.md",
                  json_ld=[seo.breadcrumb(s, [(c.learn.title, "/learn/")])], sources=["README.md"]),
             Page("/learn/all/", "learn_all.html", f"{c.all.title} · {s.config.site['name']}", c.all.lede,
                  nav="/learn/", twin="/learn/all.md", noindex=True, sources=["README.md"]),
             Page("/404.html", "404.html", c.notfound.heading, c.notfound.text, noindex=True),
         ]
         for sec in s.sections:
-            title = f"{sec.number}. {sec.title} · {s.config.site['name']}"
-            desc = " ".join((sec.preamble or f"{sec.title}: the primary sources, in dependency order.").split())
-            desc = re.sub(r"\*\*", "", desc)
-            if sec.kind == "watchlist":
-                pages.append(Page(sec.url, "watchlist.html", title, desc, nav="/watchlist/", twin=sec.twin,
-                                  json_ld=seo.section_ld(s, sec), sources=["README.md"], context={"s": sec}))
-            else:
-                pages.append(Page(sec.url, "chapter.html", title, desc, nav="/learn/", twin=sec.twin,
-                                  json_ld=seo.section_ld(s, sec), sources=["README.md"], context={"s": sec}))
+            topic = c.chapter_search.get(sec.slug, {})
+            title = topic.get("title") or f"{sec.title} · {s.config.site['name']}"
+            desc = topic.get("description") or agents.strip_html(sec.preamble_html).strip() or sec.title
+            watchlist = sec.kind == "watchlist"
+            pages.append(Page(sec.url, "watchlist.html" if watchlist else "chapter.html", title, desc,
+                              nav="/watchlist/" if watchlist else "/learn/", twin=sec.twin,
+                              json_ld=seo.section_ld(s, sec, title, desc), sources=["README.md"], context={"s": sec}))
         pages += self.plan_more()
         return pages
 
@@ -111,17 +107,17 @@ class Builder:
         name = s.config.site["name"]
         pages: list[Page] = []
         if (TEMPLATES / "benchmarks_index.html").is_file():
-            pages.append(Page("/benchmarks/", "benchmarks_index.html", f"{c.benchmarks.title} · {name}",
-                              s.bench_readme["lede"],
+            pages.append(Page("/benchmarks/", "benchmarks_index.html", c.benchmarks.search_title, c.benchmarks.description,
                               nav="/benchmarks/", twin="/benchmarks.md",
                               json_ld=[seo.breadcrumb(s, [(c.benchmarks.title, "/benchmarks/")])],
                               sources=["misc/benchmarks/README.md"]))
             for b in s.benchmarks:
-                pages.append(Page(b.url, "benchmark.html", f"{b.title} · {c.benchmarks.title}", b.index_claim or b.claim[:160],
+                title = c.benchmark_search.get(b.slug, b.title)
+                pages.append(Page(b.url, "benchmark.html", f"{title} · C Benchmark", b.index_claim or b.description,
                                   nav="/benchmarks/", twin=b.twin, json_ld=seo.benchmark_ld(s, b),
                                   sources=[b.files["readme"], b.files["raw"], b.files["summary"]], context={"b": b}))
         if (TEMPLATES / "evidence.html").is_file():
-            pages.append(Page("/evidence/", "evidence.html", f"{c.evidence.title} · {name}", c.evidence.heading,
+            pages.append(Page("/evidence/", "evidence.html", c.evidence.search_title, c.evidence.description,
                               nav="/evidence/", twin="/evidence.md",
                               json_ld=[seo.breadcrumb(s, [(c.evidence.title, "/evidence/")])],
                               sources=["README.md", "CONTRIBUTING.md"]))
@@ -135,16 +131,16 @@ class Builder:
                               twin="/evidence/record/link-notes.md", sources=["misc/notes/sections"]))
         if (TEMPLATES / "mcp" / "index.html").is_file():
             for slug, label, desc in (
-                ("", c.mcp.nav_overview, c.mcp.title),
-                ("quickstart/", c.mcp.nav_quickstart, c.mcp.quickstart_lede),
-                ("tools/", c.mcp.nav_tools, c.mcp.tools_lede),
-                ("resources/", c.mcp.nav_resources, c.mcp.resources_lede),
-                ("workflows/", c.mcp.nav_workflows, c.mcp.workflows_lede),
-                ("security/", c.mcp.nav_security, c.mcp.security_lede),
+                ("", c.mcp.nav_overview, c.mcp.overview_description),
+                ("quickstart/", c.mcp.quickstart_search_title, c.mcp.quickstart_description),
+                ("tools/", c.mcp.tools_heading, c.mcp.tools_description),
+                ("resources/", c.mcp.resources_heading, c.mcp.resources_description),
+                ("workflows/", c.mcp.workflows_heading, c.mcp.workflows_description),
+                ("security/", c.mcp.security_heading, c.mcp.security_description),
             ):
                 tmpl = f"mcp/{slug.rstrip('/') or 'index'}.html"
                 path = f"/mcp/{slug}"
-                title = f"{c.mcp.title} · {name}" if not slug else f"{label} · {c.mcp.title}"
+                title = c.mcp.search_title if not slug else f"{label} · cpu-perf MCP"
                 twin = "/mcp.md" if not slug else f"/mcp/{slug.rstrip('/')}.md"
                 pages.append(Page(path, tmpl, title, desc, nav="/mcp/", twin=twin,
                                   json_ld=seo.mcp_ld(s, path, label), sources=["misc/mcp/README.md"],

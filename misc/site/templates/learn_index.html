@@ -1,7 +1,9 @@
 {% extends "_base.html" %}
 {% import "_macros.html" as m with context %}
 {% block main %}
-{% call m.page_header(copy.learn.eyebrow, copy.learn.heading, site.intro.closing_html) %}{% endcall %}
+{% call m.page_header(copy.learn.eyebrow, copy.learn.heading, site.intro.closing_html) %}
+<p><a class="link-primary small" href="#performance-questions">{{ copy.learn.questions_heading }} ↓</a></p>
+{% endcall %}
 <div class="container-lab" id="contents">
   {% for g in site.groups %}
   <section class="group" aria-labelledby="group-{{ g.id }}">
@@ -30,6 +32,24 @@
     </ol>
   </section>
   {% endfor %}
+  <section class="group" aria-labelledby="performance-questions">
+    <div class="group-head">
+      <h2 id="performance-questions" class="h3">{{ copy.learn.questions_heading }}</h2>
+    </div>
+    <div class="cards cards-4">
+      {% for q in copy.learn.questions %}
+      {% set b = site.bench_by_slug[q.benchmark] %}
+      <div class="card">
+        <h3>{{ q.title }}</h3>
+        <p class="blurb">{{ q.text }}</p>
+        <ul>
+          <li><a href="{{ q.href }}">{{ q.read }}</a></li>
+          <li><a href="{{ b.url }}">{{ b.title }} · {{ copy.learn.benchmark }}</a></li>
+        </ul>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
   <p class="mt-section"><a class="link-primary small" href="/learn/all/">{{ copy.learn.all_link }}</a></p>
 </div>
 {% endblock %}
